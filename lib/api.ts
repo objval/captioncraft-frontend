@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase"
 
-const API_BASE_URL = "https://209f6fdb720c.ngrok-free.app:3000/v1"
+const API_BASE_URL = "https://34.176.101.69:3000/v1"
 
 // Helper function to make authenticated API calls with Supabase fallback
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
