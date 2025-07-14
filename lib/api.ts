@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase"
 
-const API_BASE_URL = "https://34.176.101.69:3000/v1"
+// Use environment variable or fall back to the hardcoded IP
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://34.176.101.69:3000/v1"
 
 // Helper function to make authenticated API calls with Supabase fallback
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
