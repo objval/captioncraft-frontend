@@ -83,7 +83,7 @@ export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
       })
 
       // Setup request
-      xhr.open("POST", "http://34.176.101.69:3000/v1/videos/upload")
+      xhr.open("POST", "https://nesontheshet.com/v1/videos/upload")
       xhr.setRequestHeader("Authorization", `Bearer ${token}`)
       xhr.withCredentials = true
       xhr.timeout = 300000 // 5 minute timeout
