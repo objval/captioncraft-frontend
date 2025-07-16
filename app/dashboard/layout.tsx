@@ -95,19 +95,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               setUploadModalOpen(true)
               onItemClick?.()
             }} 
-            className="w-full mb-4 h-10"
+            className="w-full mb-6 h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
           >
             <Plus className="h-4 w-4 mr-2" />
             Upload Video
           </Button>
-          <Separator className="mb-6" />
+          <Separator className="mb-6 bg-slate-200" />
         </>
       )}
       
       {/* Navigation */}
-      <nav className={cn("space-y-1 flex-1", !showUploadButton && "mt-0")}>
-        <div className="mb-4">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Navigation</h3>
+      <nav className={cn("space-y-2 flex-1", !showUploadButton && "mt-0")}>
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">Navigation</h3>
         </div>
         {sidebarItems.map((item) => {
           const Icon = item.icon
@@ -119,64 +119,73 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               href={item.href}
               onClick={onItemClick}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors group",
+                "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 group relative overflow-hidden",
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25"
+                  : "text-slate-600 hover:bg-white/80 hover:text-slate-800 hover:shadow-sm"
               )}
             >
               <Icon className={cn(
-                "h-4 w-4 flex-shrink-0 transition-colors",
-                isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                "h-5 w-5 flex-shrink-0 transition-colors",
+                isActive ? "text-white" : "text-slate-500 group-hover:text-slate-700"
               )} />
               <div className="flex-1 min-w-0">
-                <div className="truncate">{item.title}</div>
+                <div className="font-semibold">{item.title}</div>
                 <div className={cn(
-                  "text-xs opacity-75 truncate transition-colors",
-                  isActive ? "text-primary-foreground/80" : "text-muted-foreground group-hover:text-foreground/70"
+                  "text-xs opacity-80 truncate transition-colors",
+                  isActive ? "text-white/90" : "text-slate-500 group-hover:text-slate-600"
                 )}>{item.description}</div>
               </div>
+              {isActive && (
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-600/20 pointer-events-none" />
+              )}
             </Link>
           )
         })}
       </nav>
       
-      <Separator className="my-6" />
+      <Separator className="my-6 bg-slate-200" />
       
       {/* Quick Stats */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Quick Stats</h3>
+          <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">Quick Stats</h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-2">
-                <Video className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium">Total Videos</span>
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <Video className="h-4 w-4 text-blue-600" />
+                </div>
+                <span className="text-sm font-semibold text-slate-700">Total Videos</span>
               </div>
-              <span className="text-sm font-bold">{loading ? "--" : totalVideos}</span>
+              <span className="text-sm font-bold text-slate-800">{loading ? "--" : totalVideos}</span>
             </div>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-orange-600" />
-                <span className="text-sm font-medium">Processing</span>
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-100 border border-amber-200/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <BarChart3 className="h-4 w-4 text-amber-600" />
+                </div>
+                <span className="text-sm font-semibold text-slate-700">Processing</span>
               </div>
-              <span className="text-sm font-bold">{loading ? "--" : processingVideos}</span>
+              <span className="text-sm font-bold text-slate-800">{loading ? "--" : processingVideos}</span>
             </div>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium">Completed</span>
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-green-100 border border-emerald-200/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10">
+                  <CheckCircle className="h-4 w-4 text-emerald-600" />
+                </div>
+                <span className="text-sm font-semibold text-slate-700">Completed</span>
               </div>
-              <span className="text-sm font-bold">{loading ? "--" : completedVideos}</span>
+              <span className="text-sm font-bold text-slate-800">{loading ? "--" : completedVideos}</span>
             </div>
           </div>
         </div>
         
         {/* Additional Info */}
         <div className="pt-2">
-          <div className="text-xs text-muted-foreground text-center p-3 rounded-lg bg-muted/30">
-            <div className="font-medium mb-1">Need Help?</div>
-            <div>Check our guides and tutorials</div>
+          <div className="text-xs text-slate-600 text-center p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200/50">
+            <div className="font-semibold mb-1 text-slate-700">Need Help?</div>
+            <div className="text-slate-500">Check our guides and tutorials</div>
           </div>
         </div>
       </div>
@@ -184,7 +193,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   )
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
       <Navbar 
         onSidebarToggle={() => setSidebarOpen(true)}
         showSidebarToggle={true}
@@ -192,15 +201,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       
       <div className="flex h-[calc(100vh-64px)]">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:flex bg-card border-r border-border p-6">
-          <SidebarContent showUploadButton={true} />
+        <div className="hidden lg:flex w-80 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 shadow-sm">
+          <div className="w-full p-6 bg-gradient-to-b from-white/50 to-slate-50/50">
+            <SidebarContent showUploadButton={true} />
+          </div>
         </div>
         
         {/* Mobile Sidebar */}
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="w-72 p-6">
+          <SheetContent side="left" className="w-80 p-6 bg-white/95 backdrop-blur-xl border-slate-200">
             <SheetHeader className="mb-6">
-              <SheetTitle>Navigation</SheetTitle>
+              <SheetTitle className="text-slate-800 font-bold">Navigation</SheetTitle>
             </SheetHeader>
             <SidebarContent onItemClick={() => setSidebarOpen(false)} showUploadButton={false} />
           </SheetContent>
@@ -208,7 +219,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
-          <div className="lg:p-6 p-4">
+          <div className="max-w-[1600px] mx-auto lg:p-8 p-4">
             {children}
           </div>
         </div>
@@ -217,7 +228,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Floating Upload Button */}
       <FloatingActionButton 
         onClick={() => setUploadModalOpen(true)}
-        className="lg:hidden"
+        className="lg:hidden bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
       />
       
       <UploadModal isOpen={uploadModalOpen} onCloseAction={() => setUploadModalOpen(false)} />

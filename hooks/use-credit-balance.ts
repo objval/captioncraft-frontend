@@ -2,25 +2,45 @@
 
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase"
-import { api } from "@/lib/api"
 
 export function useCreditBalance(userId: string | undefined) {
   const [credits, setCredits] = useState(0)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId) {
+      setLoading(false)
+      return
+    }
 
-    // Initial fetch
+    const supabase = createClient()
+    let cleanup: (() => void) | null = null
+
+    // Initial fetch from Supabase
     const fetchCredits = async () => {
       try {
-        const creditsData = await api.getCredits()
-        setCredits(creditsData.credits)
-      } catch (error) {
-        console.error("Failed to fetch credits:", error)
-        // Set default credits if API fails
-        setCredits(91)
+        setLoading(true)
+        setError(null)
+
+        const { data, error: fetchError } = await supabase
+          .from("profiles")
+          .select("credits")
+          .eq("id", userId)
+          .single()
+
+        if (fetchError) {
+          console.error("Error fetching credits:", fetchError)
+          setError("Failed to fetch credits")
+          // Set default value on error
+          setCredits(0)
+        } else {
+          setCredits(data?.credits || 0)
+        }
+      } catch (err) {
+        console.error("Credits fetch error:", err)
+        setError("Failed to fetch credits")
+        setCredits(0)
       } finally {
         setLoading(false)
       }
@@ -28,9 +48,9 @@ export function useCreditBalance(userId: string | undefined) {
 
     fetchCredits()
 
-    // Realtime subscription for credit updates
+    // Set up real-time subscription for credit updates
     const channel = supabase
-      .channel("profiles")
+      .channel(`credits:profile_id=eq.${userId}`)
       .on(
         "postgres_changes",
         {
@@ -40,15 +60,47 @@ export function useCreditBalance(userId: string | undefined) {
           filter: `id=eq.${userId}`,
         },
         (payload) => {
-          setCredits(payload.new.credits)
-        },
+          console.log("Credits updated:", payload.new.credits)
+          setCredits(payload.new.credits || 0)
+        }
       )
       .subscribe()
 
-    return () => {
+    cleanup = () => {
       supabase.removeChannel(channel)
     }
-  }, [userId, supabase])
 
-  return { credits, loading }
+    return cleanup
+  }, [userId])
+
+  const refreshCredits = async () => {
+    if (!userId) return
+
+    const supabase = createClient()
+    try {
+      setError(null)
+      const { data, error: fetchError } = await supabase
+        .from("profiles")
+        .select("credits")
+        .eq("id", userId)
+        .single()
+
+      if (fetchError) {
+        console.error("Error refreshing credits:", fetchError)
+        setError("Failed to refresh credits")
+      } else {
+        setCredits(data?.credits || 0)
+      }
+    } catch (err) {
+      console.error("Credits refresh error:", err)
+      setError("Failed to refresh credits")
+    }
+  }
+
+  return { 
+    credits, 
+    loading, 
+    error,
+    refreshCredits 
+  }
 }

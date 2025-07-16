@@ -9,6 +9,8 @@ import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
 import { useTransactions, getTransactionDisplayName } from "@/hooks/use-transactions"
+import { getCreditPacks } from "@/lib/credit-packs"
+import { getUserProfile } from "@/lib/profiles"
 import { api } from "@/lib/api"
 import { 
   Coins, 
@@ -32,7 +34,7 @@ interface CreditPack {
   id: string
   name: string
   credits_amount: number
-  price_usd: number
+  price_nis: number
   popular?: boolean
   bonus?: number
 }
@@ -45,18 +47,20 @@ export default function CreditsPage() {
   const [creditPacks, setCreditPacks] = useState<CreditPack[]>([])
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState<string | null>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
 
   // Load credit packs and transactions
   useEffect(() => {
     const loadData = async () => {
       try {
         // Load credit packs
-        const packs = await api.getCreditPacks()
+        const packs = await getCreditPacks()
         
         // Add popular flag and bonus for display
         const enhancedPacks = packs.map((pack: any) => ({
           ...pack,
-          popular: pack.credits_amount === 20, // Professional pack is popular
+          popular: pack.credits_amount === 10, // Pro pack with 10 credits is popular
           bonus: pack.credits_amount >= 50 ? Math.floor(pack.credits_amount * 0.1) : 0
         }))
         
@@ -72,27 +76,73 @@ export default function CreditsPage() {
     loadData()
   }, [])
 
+  // Load user profile for payment validation
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return
+      
+      try {
+        const profileData = await getUserProfile()
+        setProfile(profileData)
+      } catch (error) {
+        console.error("Failed to load profile:", error)
+      } finally {
+        setProfileLoading(false)
+      }
+    }
+
+    loadProfile()
+  }, [user?.id])
+
+  const isProfileComplete = () => {
+    if (!profile) return false
+    return !!(
+      profile.first_name &&
+      profile.last_name &&
+      profile.phone_number &&
+      profile.street &&
+      profile.city
+    )
+  }
+
   const handlePurchase = async (pack: CreditPack) => {
+    console.log("Attempting purchase for pack:", pack)
+    
     if (!user?.id) {
       toast.error("Please sign in to purchase credits")
+      return
+    }
+
+    // Check if profile is complete before allowing payment
+    if (!isProfileComplete()) {
+      toast.error("Please complete your profile before making a purchase")
+      // Redirect to profile page with a message
+      setTimeout(() => {
+        window.location.href = "/dashboard/profile"
+      }, 1500)
       return
     }
 
     setPurchasing(pack.id)
     
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Show loading toast
+      const loadingToast = toast.loading("Redirecting to payment page...")
       
-      // In a real app, this would integrate with Stripe or another payment processor
-      // For now, we'll just show success
-      toast.success(`Successfully purchased ${pack.credits_amount} credits!`)
+      // Initiate payment with backend
+      console.log("Calling initiatePayment with ID:", pack.id)
+      const response = await api.initiatePayment(pack.id)
       
-      // Refresh credit balance
-      window.location.reload()
+      // Dismiss loading toast
+      toast.dismiss(loadingToast)
+      
+      // Redirect user to Hypay payment page
+      console.log("Redirecting to:", response.paymentPageUrl)
+      window.location.href = response.paymentPageUrl
+      
     } catch (error) {
       console.error("Purchase failed:", error)
-      toast.error("Purchase failed. Please try again.")
+      toast.error("Failed to initiate payment. Please try again.")
     } finally {
       setPurchasing(null)
     }
@@ -121,7 +171,7 @@ export default function CreditsPage() {
   }
 
   const calculateValuePerCredit = (pack: CreditPack) => {
-    return (pack.price_usd / pack.credits_amount).toFixed(2)
+    return (pack.price_nis / pack.credits_amount).toFixed(2)
   }
 
   const getBestValue = () => {
@@ -131,7 +181,7 @@ export default function CreditsPage() {
     )
   }
 
-  if (loading || creditsLoading || transactionsLoading) {
+  if (loading || creditsLoading || transactionsLoading || profileLoading) {
     return (
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -197,6 +247,33 @@ export default function CreditsPage() {
         </CardContent>
       </Card>
 
+      {/* Profile Completion Warning */}
+      {!isProfileComplete() && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 p-2 bg-amber-100 rounded-full">
+                <Info className="h-4 w-4 text-amber-600" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-medium text-amber-900">Complete Your Profile</h3>
+                <p className="text-sm text-amber-700">
+                  Please complete your profile information (name, phone, and address) before making a purchase. 
+                  This information is required for payment processing and invoice generation.
+                </p>
+                <Button 
+                  size="sm" 
+                  onClick={() => window.location.href = "/dashboard/profile"}
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  Complete Profile
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Credit Packs */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -206,6 +283,26 @@ export default function CreditsPage() {
             <span>All purchases are one-time, no subscriptions</span>
           </div>
         </div>
+
+        {/* Payment Info */}
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 p-2 bg-blue-100 rounded-full">
+                <Shield className="h-4 w-4 text-blue-600" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-medium text-blue-900">Secure Payment Processing</h3>
+                <p className="text-sm text-blue-700">
+                  Payments are processed securely through Hypay. You'll be redirected to their secure payment page to complete your purchase.
+                </p>
+                <p className="text-xs text-blue-600">
+                  After successful payment, your credits will be automatically added to your account.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {creditPacks.map((pack) => (
@@ -237,7 +334,7 @@ export default function CreditsPage() {
                   {getPackIcon(pack)}
                 </div>
                 <CardTitle className="text-lg">{pack.name}</CardTitle>
-                <div className="text-3xl font-bold">${pack.price_usd}</div>
+                <div className="text-3xl font-bold">₪{pack.price_nis}</div>
               </CardHeader>
 
               <CardContent className="space-y-4">
@@ -256,7 +353,7 @@ export default function CreditsPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Per credit:</span>
-                    <span className="font-medium">${calculateValuePerCredit(pack)}</span>
+                    <span className="font-medium">₪{calculateValuePerCredit(pack)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Videos:</span>
@@ -266,19 +363,24 @@ export default function CreditsPage() {
 
                 <Button 
                   onClick={() => handlePurchase(pack)}
-                  disabled={purchasing === pack.id}
+                  disabled={purchasing === pack.id || !isProfileComplete()}
                   className="w-full"
                   variant={pack.popular ? "default" : "outline"}
                 >
                   {purchasing === pack.id ? (
                     <>
                       <Clock className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
+                      Redirecting...
+                    </>
+                  ) : !isProfileComplete() ? (
+                    <>
+                      <Info className="h-4 w-4 mr-2" />
+                      Complete Profile First
                     </>
                   ) : (
                     <>
                       <CreditCard className="h-4 w-4 mr-2" />
-                      Purchase
+                      Buy Now
                     </>
                   )}
                 </Button>

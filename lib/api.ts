@@ -1,8 +1,7 @@
 import { createClient } from "@/lib/supabase"
 
-// Use environment variable or fall back to the hardcoded IP
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://nesontheshet.com/v1"
-
+const YOUR_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dl32shhkk"
 // Helper function to make authenticated API calls with Supabase fallback
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const supabase = createClient()
@@ -23,6 +22,12 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: "Unknown error" }))
+      console.error("API Error Details:", {
+        status: response.status,
+        statusText: response.statusText,
+        errorData,
+        url: `${API_BASE_URL}${endpoint}`
+      })
       const error = new Error(errorData.message || `API Error: ${response.status}`)
       ;(error as any).status = response.status
       ;(error as any).data = errorData
@@ -53,14 +58,14 @@ const supabaseFallback = {
     return data.map((video) => ({
       ...video,
       original_video_url: video.original_video_cloudinary_id
-        ? `https://res.cloudinary.com/your-cloud/video/upload/${video.original_video_cloudinary_id}`
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${video.original_video_cloudinary_id}`
         : null,
       final_video_url: video.final_video_cloudinary_id
-        ? `https://res.cloudinary.com/your-cloud/video/upload/${video.final_video_cloudinary_id}`
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${video.final_video_cloudinary_id}`
         : null,
       burned_video_url: video.final_video_cloudinary_id
-        ? `https://res.cloudinary.com/your-cloud/video/upload/${video.final_video_cloudinary_id}`
-        : null,
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${video.final_video_cloudinary_id}`
+        : null, 
     }))
   },
 
@@ -80,13 +85,13 @@ const supabaseFallback = {
     return {
       ...data,
       original_video_url: data.original_video_cloudinary_id
-        ? `https://res.cloudinary.com/your-cloud/video/upload/${data.original_video_cloudinary_id}`
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${data.original_video_cloudinary_id}`
         : null,
       final_video_url: data.final_video_cloudinary_id
-        ? `https://res.cloudinary.com/your-cloud/video/upload/${data.final_video_cloudinary_id}`
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${data.final_video_cloudinary_id}`
         : null,
       burned_video_url: data.final_video_cloudinary_id
-        ? `https://res.cloudinary.com/your-cloud/video/upload/${data.final_video_cloudinary_id}`
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${data.final_video_cloudinary_id}`
         : null,
     }
   },
@@ -185,13 +190,31 @@ export const api = {
     }
   },
 
-  // Credits - mock data for now since external API is not available
+  // Credits - fallback to Supabase since external API is not available
   getCredits: async () => {
     try {
       return await apiCall("/credits/me")
     } catch (error) {
-      console.log("Using mock data for credits")
-      return { credits: 91 }
+      console.log("Using Supabase fallback for credits")
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        return { credits: 0 }
+      }
+
+      const { data, error: creditsError } = await supabase
+        .from("profiles")
+        .select("credits")
+        .eq("id", user.id)
+        .single()
+
+      if (creditsError) {
+        console.error("Error fetching credits from Supabase:", creditsError)
+        return { credits: 0 }
+      }
+
+      return { credits: data?.credits || 0 }
     }
   },
 
@@ -199,12 +222,116 @@ export const api = {
     try {
       return await apiCall("/credits/packs")
     } catch (error) {
-      console.log("Using mock data for credit packs")
-      return [
-        { id: "1", name: "Starter Pack", credits_amount: 5, price_usd: 9.99 },
-        { id: "2", name: "Pro Pack", credits_amount: 10, price_usd: 19.99 },
-        { id: "3", name: "Business Pack", credits_amount: 25, price_usd: 49.99 },
-      ]
+      console.log("Using Supabase fallback for credit packs")
+      const supabase = createClient()
+      const { data, error: packsError } = await supabase
+        .from("credit_packs")
+        .select("*")
+        .order("credits_amount", { ascending: true })
+
+      if (packsError) {
+        console.error("Supabase error:", packsError)
+        throw packsError
+      }
+      
+      console.log("Credit packs from Supabase:", data)
+      return data || []
+    }
+  },
+
+  // Payments - Hypay integration
+  initiatePayment: async (creditPackId: string): Promise<PaymentInitiationResponse> => {
+    console.log("Initiating payment for credit pack:", creditPackId)
+    console.log("Credit pack ID type:", typeof creditPackId)
+    console.log("Credit pack ID length:", creditPackId.length)
+    
+    if (!creditPackId || typeof creditPackId !== 'string') {
+      throw new Error("Invalid credit pack ID provided")
+    }
+    
+    // Trim any whitespace and validate UUID format
+    const trimmedId = creditPackId.trim()
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    
+    if (!uuidRegex.test(trimmedId)) {
+      console.error("Invalid UUID format:", trimmedId)
+      throw new Error("Invalid credit pack ID format")
+    }
+    
+    console.log("Sending trimmed UUID:", trimmedId)
+    
+    try {
+      const response = await apiCall("/payments/initiate", {
+        method: "POST",
+        body: JSON.stringify({ creditPackId: trimmedId }),
+      })
+      console.log("Payment initiation successful:", response)
+      return response
+    } catch (error) {
+      console.error("Payment initiation failed:", error)
+      // Log the exact error details for debugging
+      if (error && typeof error === 'object' && 'data' in error) {
+        console.error("Backend error details:", (error as any).data)
+      }
+      throw new Error("Failed to initiate payment. Please try again.")
+    }
+  },
+
+  // Profile management
+  getProfile: async (): Promise<UserProfile> => {
+    try {
+      return await apiCall("/profile/me")
+    } catch (error) {
+      console.log("Using Supabase fallback for profile")
+      const supabase = createClient()
+      const { data, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .single()
+
+      if (profileError) throw profileError
+      return data
+    }
+  },
+
+  updateProfile: async (profileData: Partial<UserProfile>): Promise<UserProfile> => {
+    try {
+      return await apiCall("/profile/me", {
+        method: "PATCH",
+        body: JSON.stringify(profileData),
+      })
+    } catch (error) {
+      console.log("Using Supabase fallback for profile update")
+      const supabase = createClient()
+      const { data, error: updateError } = await supabase
+        .from("profiles")
+        .update(profileData)
+        .select("*")
+        .single()
+
+      if (updateError) throw updateError
+      return data
+    }
+  },
+
+  // Payment history
+  getPayments: async (): Promise<Payment[]> => {
+    try {
+      return await apiCall("/payments")
+    } catch (error) {
+      console.log("Using Supabase fallback for payments")
+      const supabase = createClient()
+      const { data, error: paymentsError } = await supabase
+        .from("payments")
+        .select(`
+          *,
+          credit_packs(name, credits_amount),
+          invoices(invoice_number, invoice_url, status)
+        `)
+        .order("created_at", { ascending: false })
+
+      if (paymentsError) throw paymentsError
+      return data || []
     }
   },
 }
@@ -269,5 +396,42 @@ export interface CreditPack {
   id: string
   name: string
   credits_amount: number
-  price_usd: number
+  price_nis: number
+}
+
+export interface PaymentInitiationResponse {
+  paymentPageUrl: string
+}
+
+export interface UserProfile {
+  id: string
+  email: string
+  credits: number
+  first_name?: string
+  last_name?: string
+  phone_number?: string
+  street?: string
+  city?: string
+  zip_code?: string
+}
+
+export interface Payment {
+  id: string
+  user_id: string
+  credit_pack_id: string
+  amount: number
+  status: "pending" | "succeeded" | "failed"
+  hypay_transaction_id?: string
+  provider_response?: any
+  created_at: string
+  updated_at: string
+  credit_packs?: {
+    name: string
+    credits_amount: number
+  }
+  invoices?: Array<{
+    invoice_number?: string
+    invoice_url?: string
+    status?: string
+  }>
 }

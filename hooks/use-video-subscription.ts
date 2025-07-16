@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { getUserVideos, subscribeToUserVideos } from "@/lib/videos"
+import type { Video } from "@/lib/api"
 import { createClient } from "@/lib/supabase"
-import { api, type Video } from "@/lib/api"
 import toast from "react-hot-toast"
 
 export function useVideoSubscription(userId: string | undefined) {
@@ -13,10 +14,12 @@ export function useVideoSubscription(userId: string | undefined) {
   useEffect(() => {
     if (!userId) return
 
-    // Initial fetch
+    let cleanup: (() => void) | null = null
+
+    // Initial fetch using direct Supabase connection
     const fetchVideos = async () => {
       try {
-        const videosData = await api.getVideos()
+        const videosData = await getUserVideos()
         setVideos(videosData)
       } catch (error) {
         console.error("Failed to fetch videos:", error)
@@ -28,25 +31,13 @@ export function useVideoSubscription(userId: string | undefined) {
 
     fetchVideos()
 
-    // Realtime subscription
-    const channel = supabase
-      .channel("videos")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "videos",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          handleVideoUpdate(payload)
-        },
-      )
-      .subscribe()
+    // Set up real-time subscription using the videos library
+    cleanup = subscribeToUserVideos(userId, (payload) => {
+      handleVideoUpdate(payload)
+    })
 
     return () => {
-      supabase.removeChannel(channel)
+      if (cleanup) cleanup()
     }
   }, [userId, supabase])
 
