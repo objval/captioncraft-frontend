@@ -32,31 +32,21 @@ export async function getUserPayments(): Promise<Payment[]> {
       })
     })
 
-    // If no invoices are returned, try a fallback approach with manual joins
+    // Fix invoice data structure - convert object to array if needed
     if (data && data.length > 0) {
-      const paymentsWithInvoices = await Promise.all(
-        data.map(async (payment: any) => {
-          if (!payment.invoices || payment.invoices.length === 0) {
-            // Try to fetch invoice separately
-            const { data: invoiceData, error: invoiceError } = await client
-              .from("invoices")
-              .select("invoice_number, invoice_url, status")
-              .eq("payment_id", payment.id)
-              .single()
-            
-            if (!invoiceError && invoiceData) {
-              console.log(`Found invoice for payment ${payment.id}:`, invoiceData)
-              return {
-                ...payment,
-                invoices: [invoiceData]
-              }
-            }
+      const paymentsWithFixedInvoices = data.map((payment: any) => {
+        if (payment.invoices && typeof payment.invoices === 'object' && !Array.isArray(payment.invoices)) {
+          // Convert invoice object to array format
+          console.log(`Converting invoice object to array for payment ${payment.id}`)
+          return {
+            ...payment,
+            invoices: [payment.invoices]
           }
-          return payment
-        })
-      )
+        }
+        return payment
+      })
       
-      return paymentsWithInvoices || []
+      return paymentsWithFixedInvoices || []
     }
 
     return data || []
