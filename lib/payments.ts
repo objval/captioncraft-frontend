@@ -68,7 +68,7 @@ export async function getUserPaymentStats(): Promise<{
     const { data, error } = await client
       .from("payments")
       .select(`
-        amount_nis,
+        amount,
         status,
         credit_packs(credits_amount)
       `)
@@ -94,9 +94,9 @@ export async function getUserPaymentStats(): Promise<{
         : payment.credit_packs
 
       switch (payment.status) {
-        case 'completed':
+        case 'succeeded':
           stats.successfulPayments++
-          stats.totalSpent += payment.amount_nis
+          stats.totalSpent += payment.amount
           stats.totalCreditsEarned += creditPack?.credits_amount || 0
           break
         case 'pending':
@@ -134,7 +134,7 @@ export async function getRecentPayments(limit: number = 5): Promise<Payment[]> {
         credit_packs(name, credits_amount)
       `)
       .eq("user_id", userId)
-      .eq("status", "completed")
+      .eq("status", "succeeded")
       .order("created_at", { ascending: false })
       .limit(limit)
 
