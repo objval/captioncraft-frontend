@@ -445,7 +445,7 @@ export default function PaymentHistory() {
                         {payment.invoices?.[0] ? (
                           <div className="space-y-1">
                             <div className="text-sm font-medium">
-                              #{payment.invoices[0].invoice_number}
+                              {payment.hypay_transaction_id ? `#${payment.hypay_transaction_id}` : 'Available'}
                             </div>
                             <Badge variant="outline" className="text-xs">
                               {payment.invoices[0].status || 'Generated'}
