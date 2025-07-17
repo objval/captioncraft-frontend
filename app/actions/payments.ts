@@ -484,24 +484,30 @@ export async function handlePaymentSuccess(
       console.log(`[handlePaymentSuccess] Upserting invoice for payment ${paymentId} with invoice number: ${invoiceNumber}.`)
       const { error: invoiceError } = await supabase
         .from('invoices')
-        .upsert(
-          {
-            payment_id: paymentId,
-            invoice_number: invoiceNumber,
-            invoice_url: invoiceUrl,
-            status: 'generated',
-            provider_response: providerResponse
-          },
-          { onConflict: 'payment_id' }
-        )
+        .upsert({
+          payment_id: paymentId,
+          invoice_number: invoiceNumber,
+          invoice_url: invoiceUrl,
+          status: 'generated',
+          provider_response: providerResponse,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'payment_id'
+        })
 
       if (invoiceError) {
         console.error(`[handlePaymentSuccess] Error upserting invoice for payment ${paymentId}:`, invoiceError)
         paymentLogger.log('error', 'invoice_generation_failed', {
           paymentId,
           transactionId: hypayTransactionId,
-          errorMessage: invoiceError.message
+          errorMessage: invoiceError.message,
+          metadata: {
+            invoiceNumber,
+            invoiceUrl: invoiceUrl.substring(0, 100) + '...'
+          }
         })
+        // Don't throw error - invoice generation failure shouldn't stop the payment process
+        console.warn(`[handlePaymentSuccess] Continuing without invoice for payment ${paymentId}`)
       } else {
         console.log(`[handlePaymentSuccess] Invoice record saved for payment ${paymentId}.`)
         paymentLogger.logInvoiceGenerated(paymentId, invoiceNumber, invoiceUrl)
