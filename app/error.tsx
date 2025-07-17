@@ -79,7 +79,7 @@ export default function Error({
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Button 
               size="lg" 
-              onClick={reset}
+              onClick={() => reset()}
               className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
