@@ -296,7 +296,7 @@ export default function BillingDashboard() {
       )}
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -398,7 +398,7 @@ export default function BillingDashboard() {
                   
                   <div className="text-center p-4 bg-purple-50 border border-purple-200 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">
-                      {(overview.creditsEarned - overview.currentBalance)}
+                      {Math.max(0, overview.creditsEarned - overview.currentBalance)}
                     </div>
                     <div className="text-sm text-purple-700">Credits Used</div>
                   </div>
@@ -407,12 +407,12 @@ export default function BillingDashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Credit Usage</span>
-                    <span className={getUsageColor((overview.creditsEarned - overview.currentBalance) / overview.creditsEarned * 100)}>
-                      {((overview.creditsEarned - overview.currentBalance) / overview.creditsEarned * 100).toFixed(1)}%
+                    <span className={getUsageColor(Math.max(0, (overview.creditsEarned - overview.currentBalance) / overview.creditsEarned * 100))}>
+                      {Math.max(0, ((overview.creditsEarned - overview.currentBalance) / overview.creditsEarned * 100)).toFixed(1)}%
                     </span>
                   </div>
                   <Progress 
-                    value={(overview.creditsEarned - overview.currentBalance) / overview.creditsEarned * 100} 
+                    value={Math.max(0, (overview.creditsEarned - overview.currentBalance) / overview.creditsEarned * 100)} 
                     className="h-2"
                   />
                 </div>
