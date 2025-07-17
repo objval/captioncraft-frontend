@@ -195,7 +195,8 @@ export async function verifyPaymentCallback(
 
     const responseText = await response.text()
     const responseParams = new URLSearchParams(responseText)
-    const ccode = responseParams.get('CCode')
+    const ccodeRaw = responseParams.get('CCode')
+    const ccode = ccodeRaw ? ccodeRaw.trim() : null
 
     // CCode=0 means verification successful
     // CCode=902 means verification failed

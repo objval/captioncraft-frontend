@@ -49,10 +49,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mx-auto mb-4">
-            <span className="text-primary-foreground font-bold text-lg">CC</span>
+            <span className="text-primary-foreground font-bold text-lg">K</span>
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your CaptionCraft account</CardDescription>
+          <CardDescription>Sign in to your Kalil account</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleLogin}>

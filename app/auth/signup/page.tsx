@@ -220,10 +220,10 @@ export default function SignupPage() {
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mx-auto mb-4">
-            <span className="text-primary-foreground font-bold text-lg">CC</span>
+            <span className="text-primary-foreground font-bold text-lg">K</span>
           </div>
           <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>Join CaptionCraft and start creating amazing videos</CardDescription>
+          <CardDescription>Join Kalil and start creating amazing videos</CardDescription>
           
           {/* Progress Steps */}
           <div className="mt-6 space-y-4">
