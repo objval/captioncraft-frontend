@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { generatePrintHeshUrl } from '@/lib/invoices'
 
 // Hypay credentials from your docs
 const HYPAY_CONFIG = {
@@ -300,23 +301,27 @@ export async function handlePaymentSuccess(
       console.warn(`[handlePaymentSuccess] Credit pack details not found for payment ${paymentId}. Credits not added.`)
     }
 
-    // 4. Create invoice record if invoice number provided
+    // 4. Insert or update invoice record
+    const invoiceUrl = generatePrintHeshUrl(hypayTransactionId)
     if (invoiceNumber) {
-      console.log(`[handlePaymentSuccess] Creating invoice record for payment ${paymentId} with invoice number: ${invoiceNumber}.`)
+      console.log(`[handlePaymentSuccess] Upserting invoice for payment ${paymentId} with invoice number: ${invoiceNumber}.`)
       const { error: invoiceError } = await supabase
         .from('invoices')
-        .insert({
-          payment_id: paymentId,
-          invoice_number: invoiceNumber,
-          status: 'generated',
-          provider_response: providerResponse
-        })
+        .upsert(
+          {
+            payment_id: paymentId,
+            invoice_number: invoiceNumber,
+            invoice_url: invoiceUrl,
+            status: 'generated',
+            provider_response: providerResponse
+          },
+          { onConflict: 'payment_id' }
+        )
 
       if (invoiceError) {
-        console.error(`[handlePaymentSuccess] Error creating invoice record for payment ${paymentId}:`, invoiceError)
-        // Decide if this error should prevent success. For now, we log and continue.
+        console.error(`[handlePaymentSuccess] Error upserting invoice for payment ${paymentId}:`, invoiceError)
       } else {
-        console.log(`[handlePaymentSuccess] Invoice record created for payment ${paymentId}.`)
+        console.log(`[handlePaymentSuccess] Invoice record saved for payment ${paymentId}.`)
       }
     } else {
       console.log(`[handlePaymentSuccess] No invoice number provided for payment ${paymentId}. Skipping invoice record creation.`)
