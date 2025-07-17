@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { createServiceRoleClient } from '@/utils/supabase/service-role'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { generatePrintHeshUrl } from '@/lib/invoices'
@@ -335,7 +336,8 @@ export async function handlePaymentSuccess(
     })
     throw new Error('Invalid transaction ID format')
   }
-  const supabase = await createClient()
+  // Use service role client to bypass RLS for external callback
+  const supabase = createServiceRoleClient()
   console.log(`[handlePaymentSuccess] Processing paymentId: ${paymentId}`)
 
   // Check for duplicate transaction ID
