@@ -479,7 +479,15 @@ export async function handlePaymentSuccess(
     }
 
     // 4. Insert or update invoice record
-    const invoiceUrl = generatePrintHeshUrl(hypayTransactionId)
+    let invoiceUrl: string
+    try {
+      invoiceUrl = await generatePrintHeshUrl(hypayTransactionId)
+      console.log(`[handlePaymentSuccess] Generated invoice URL for transaction ${hypayTransactionId}`)
+    } catch (error) {
+      console.error(`[handlePaymentSuccess] Error generating invoice URL for transaction ${hypayTransactionId}:`, error)
+      invoiceUrl = '' // Set empty URL if generation fails
+    }
+    
     if (invoiceNumber) {
       console.log(`[handlePaymentSuccess] Upserting invoice for payment ${paymentId} with invoice number: ${invoiceNumber}.`)
       const { error: invoiceError } = await supabase
