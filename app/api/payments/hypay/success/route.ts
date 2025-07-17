@@ -4,56 +4,44 @@ import { handlePaymentSuccess } from '@/app/actions/payments'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    
-    // Extract parameters from Hypay callback
-    const paymentId = searchParams.get('Order') // Order parameter contains our payment ID
-    const hypayTransactionId = searchParams.get('TransId') // Hypay transaction ID
-    const amount = searchParams.get('Amount') // Amount paid
-    const invoiceNumber = searchParams.get('InvoiceNumber') // EzCount invoice number
-    const result = searchParams.get('Result') // Payment result status
-    
-    // Validate required parameters
-    if (!paymentId || !hypayTransactionId || !amount || result !== '1') {
-      console.error('Invalid payment callback parameters:', {
-        paymentId,
-        hypayTransactionId,
+
+    // Expected parameters from Hypay
+    const orderId = searchParams.get('Order')
+    const transactionId = searchParams.get('Id')
+    const amount = searchParams.get('Amount')
+    const ccode = searchParams.get('CCode')
+    const hesh = searchParams.get('Hesh')
+
+    // Validate parameters
+    if (!orderId || !transactionId || !amount || ccode !== '0') {
+      console.error('Invalid success callback parameters:', {
+        orderId,
+        transactionId,
         amount,
-        result
+        ccode
       })
-      
-      return NextResponse.redirect(
-        new URL('/dashboard/credits?payment=failed', request.url)
-      )
+      const failureUrl = new URL('/dashboard/payment/failure', request.url)
+      failureUrl.searchParams.set('CCode', ccode || '')
+      failureUrl.searchParams.set('ErrMsg', 'Invalid callback parameters')
+      return NextResponse.redirect(failureUrl)
     }
 
-    // Collect all callback data for logging
-    const providerResponse = {
-      TransId: hypayTransactionId,
-      Amount: amount,
-      Result: result,
-      InvoiceNumber: invoiceNumber,
-      Order: paymentId,
-      // Include other potentially useful parameters
-      Masof: searchParams.get('Masof'),
-      UserId: searchParams.get('UserId'),
-      DateTime: searchParams.get('DateTime'),
-      // Add any other parameters Hypay might send
-      ...Object.fromEntries(searchParams.entries())
-    }
+    // Collect provider response
+    const providerResponse = Object.fromEntries(searchParams.entries())
 
     console.log('Processing payment success callback:', providerResponse)
 
-    // Handle the successful payment
     await handlePaymentSuccess(
-      paymentId,
-      hypayTransactionId,
+      orderId,
+      transactionId,
       parseFloat(amount),
-      invoiceNumber || undefined,
+      hesh || undefined,
       providerResponse
     )
 
-    // Redirect to success page
-    return NextResponse.json({ status: 'ok', message: 'Payment success callback processed' })
+    const redirectUrl = new URL('/dashboard/payment/success', request.url)
+    redirectUrl.search = searchParams.toString()
+    return NextResponse.redirect(redirectUrl)
 
   } catch (error) {
     console.error('Error processing payment success callback:', error)
