@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     const orderId = searchParams.get('Order')
     const transactionId = searchParams.get('Id')
     const amount = searchParams.get('Amount')
-    const ccode = searchParams.get('CCode')
+    const ccodeRaw = searchParams.get('CCode')
+    const ccode = ccodeRaw ? ccodeRaw.trim() : null
     const hesh = searchParams.get('Hesh')
     const signature = searchParams.get('Sign')
 

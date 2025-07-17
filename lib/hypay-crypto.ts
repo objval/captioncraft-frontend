@@ -179,6 +179,7 @@ export async function verifyPaymentCallback(
   const verifyUrl = `${config.baseUrl}?${verifyParams.toString()}`
 
   try {
+    console.log('Making verification request to:', verifyUrl)
     const response = await fetch(verifyUrl, {
       method: 'GET',
       headers: {
@@ -194,8 +195,13 @@ export async function verifyPaymentCallback(
     }
 
     const responseText = await response.text()
+    console.log('Verification response:', responseText)
+    
     const responseParams = new URLSearchParams(responseText)
-    const ccode = responseParams.get('CCode')
+    const ccodeRaw = responseParams.get('CCode')
+    const ccode = ccodeRaw ? ccodeRaw.trim() : null
+
+    console.log('Parsed CCode:', { ccodeRaw, ccode, isEqual: ccode === '0' })
 
     // CCode=0 means verification successful
     // CCode=902 means verification failed
