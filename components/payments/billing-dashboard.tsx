@@ -297,28 +297,6 @@ export default function BillingDashboard() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overview.currentBalance}</div>
-            <p className="text-xs text-muted-foreground">
-              Credits available
-            </p>
-            <div className="mt-2">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Usage rate</span>
-                <span>{overview.creditUsageRate.toFixed(1)}/day</span>
-              </div>
-              <Progress 
-                value={(overview.creditUsageRate / 10) * 100} 
-                className="mt-1 h-1"
-              />
-            </div>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -442,36 +420,6 @@ export default function BillingDashboard() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Quick Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button className="h-auto flex-col space-y-2 p-6" variant="outline">
-                  <CreditCard className="h-6 w-6" />
-                  <span>Buy Credits</span>
-                  <span className="text-xs text-muted-foreground">Purchase more credits</span>
-                </Button>
-                
-                <Button className="h-auto flex-col space-y-2 p-6" variant="outline">
-                  <Download className="h-6 w-6" />
-                  <span>Download Invoice</span>
-                  <span className="text-xs text-muted-foreground">Get latest invoice</span>
-                </Button>
-                
-                <Button className="h-auto flex-col space-y-2 p-6" variant="outline">
-                  <Settings className="h-6 w-6" />
-                  <span>Billing Settings</span>
-                  <span className="text-xs text-muted-foreground">Manage preferences</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="analytics">
