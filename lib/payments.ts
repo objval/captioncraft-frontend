@@ -6,6 +6,7 @@ import type { Payment } from "@/lib/api"
  */
 export async function getUserPayments(): Promise<Payment[]> {
   return supabaseManager.authenticatedQuery(async (client, userId) => {
+    // First, try the nested query approach
     const { data, error } = await client
       .from("payments")
       .select(`
@@ -19,6 +20,43 @@ export async function getUserPayments(): Promise<Payment[]> {
     if (error) {
       console.error("Error fetching user payments:", error)
       throw new Error(`Failed to fetch payments: ${error.message}`)
+    }
+
+    // Debug: Log the raw data to see what's being returned
+    console.log("Raw payment data:", JSON.stringify(data, null, 2))
+    data?.forEach((payment: any) => {
+      console.log(`Payment ${payment.id}:`, {
+        hasInvoices: !!payment.invoices,
+        invoiceCount: payment.invoices?.length || 0,
+        invoiceData: payment.invoices
+      })
+    })
+
+    // If no invoices are returned, try a fallback approach with manual joins
+    if (data && data.length > 0) {
+      const paymentsWithInvoices = await Promise.all(
+        data.map(async (payment: any) => {
+          if (!payment.invoices || payment.invoices.length === 0) {
+            // Try to fetch invoice separately
+            const { data: invoiceData, error: invoiceError } = await client
+              .from("invoices")
+              .select("invoice_number, invoice_url, status")
+              .eq("payment_id", payment.id)
+              .single()
+            
+            if (!invoiceError && invoiceData) {
+              console.log(`Found invoice for payment ${payment.id}:`, invoiceData)
+              return {
+                ...payment,
+                invoices: [invoiceData]
+              }
+            }
+          }
+          return payment
+        })
+      )
+      
+      return paymentsWithInvoices || []
     }
 
     return data || []
