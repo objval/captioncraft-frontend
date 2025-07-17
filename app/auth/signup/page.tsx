@@ -118,7 +118,7 @@ export default function SignupPage() {
 
       if (!formData.phoneNumber.trim()) {
         newErrors.phoneNumber = "Phone number is required"
-      } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phoneNumber.replace(/[\s\-\(\)]/g, ""))) {
+      } else if (!/^[\+]?[0-9]{1,15}$/.test(formData.phoneNumber.replace(/[\s\-\(\)]/g, ""))) {
         newErrors.phoneNumber = "Please enter a valid phone number"
       }
     }
@@ -134,7 +134,7 @@ export default function SignupPage() {
 
       if (!formData.zipCode.trim()) {
         newErrors.zipCode = "Zip code is required"
-      } else if (!/^\d{5}(-\d{4})?$/.test(formData.zipCode)) {
+      } else if (!/^\d{1,15}$/.test(formData.zipCode)) {
         newErrors.zipCode = "Please enter a valid zip code"
       }
     }
