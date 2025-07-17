@@ -1,5 +1,11 @@
-import { createBrowserClient } from "@supabase/ssr"
+// DEPRECATED: Use @/utils/supabase/client instead
+// This file is kept for backward compatibility
+import { createClient as createNewClient } from '@/utils/supabase/client'
 
+/**
+ * @deprecated Use createClient from @/utils/supabase/client instead
+ */
 export function createClient() {
-  return createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+  console.warn('DEPRECATED: lib/supabase.ts is deprecated. Use @/utils/supabase/client instead')
+  return createNewClient()
 }

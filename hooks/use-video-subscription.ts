@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { getUserVideos, subscribeToUserVideos } from "@/lib/videos"
 import type { Video } from "@/lib/api"
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/client"
 import toast from "react-hot-toast"
 
 export function useVideoSubscription(userId: string | undefined) {

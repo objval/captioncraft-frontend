@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/client"
 import type { Video, VideoStatus, TranscriptData } from "@/lib/api"
 
 const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dl32shhkk/video/upload"

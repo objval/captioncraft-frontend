@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/client"
 
 /**
  * Get user's current credit balance directly from Supabase

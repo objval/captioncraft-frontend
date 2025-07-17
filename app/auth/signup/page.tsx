@@ -12,7 +12,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/client"
+import { createOrUpdateProfile } from "@/lib/profile-creation"
 import { 
   Eye, 
   EyeOff, 
@@ -162,10 +163,21 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      // Create account
+      // Create account with profile data in metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName.trim(),
+            last_name: formData.lastName.trim(),
+            phone_number: formData.phoneNumber.trim(),
+            street: formData.street.trim(),
+            city: formData.city.trim(),
+            zip_code: formData.zipCode.trim(),
+            profile_complete: true
+          }
+        }
       })
 
       if (authError) {
@@ -173,27 +185,8 @@ export default function SignupPage() {
         return
       }
 
-      // Create profile with complete information
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            first_name: formData.firstName.trim(),
-            last_name: formData.lastName.trim(),
-            phone_number: formData.phoneNumber.trim(),
-            street: formData.street.trim(),
-            city: formData.city.trim(),
-            zip_code: formData.zipCode.trim(),
-          })
-          .eq("id", authData.user.id)
-
-        if (profileError) {
-          console.error("Profile update error:", profileError)
-          // Don't fail the registration, profile can be completed later
-        }
-      }
-
-      toast.success("Account created successfully! Please check your email to verify your account.")
+      console.log('User created with profile data in metadata. Trigger will create complete profile.')
+      toast.success("Account created successfully with complete profile information! Please check your email to verify your account.")
       router.push("/auth/login")
     } catch (error) {
       console.error("Signup error:", error)

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/client"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://nesontheshet.com/v1"
 const YOUR_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dl32shhkk"
@@ -238,44 +238,9 @@ export const api = {
       return data || []
     }
   },
-
+  
   // Payments - Hypay integration
-  initiatePayment: async (creditPackId: string): Promise<PaymentInitiationResponse> => {
-    console.log("Initiating payment for credit pack:", creditPackId)
-    console.log("Credit pack ID type:", typeof creditPackId)
-    console.log("Credit pack ID length:", creditPackId.length)
-    
-    if (!creditPackId || typeof creditPackId !== 'string') {
-      throw new Error("Invalid credit pack ID provided")
-    }
-    
-    // Trim any whitespace and validate UUID format
-    const trimmedId = creditPackId.trim()
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    
-    if (!uuidRegex.test(trimmedId)) {
-      console.error("Invalid UUID format:", trimmedId)
-      throw new Error("Invalid credit pack ID format")
-    }
-    
-    console.log("Sending trimmed UUID:", trimmedId)
-    
-    try {
-      const response = await apiCall("/payments/initiate", {
-        method: "POST",
-        body: JSON.stringify({ creditPackId: trimmedId }),
-      })
-      console.log("Payment initiation successful:", response)
-      return response
-    } catch (error) {
-      console.error("Payment initiation failed:", error)
-      // Log the exact error details for debugging
-      if (error && typeof error === 'object' && 'data' in error) {
-        console.error("Backend error details:", (error as any).data)
-      }
-      throw new Error("Failed to initiate payment. Please try again.")
-    }
-  },
+  
 
   // Profile management
   getProfile: async (): Promise<UserProfile> => {
@@ -399,9 +364,7 @@ export interface CreditPack {
   price_nis: number
 }
 
-export interface PaymentInitiationResponse {
-  paymentPageUrl: string
-}
+
 
 export interface UserProfile {
   id: string

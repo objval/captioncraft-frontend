@@ -63,10 +63,7 @@ export default function PaymentSuccessPage() {
         
         toast.success(successMessage)
         
-        // Redirect to credits page after a delay
-        setTimeout(() => {
-          router.push("/dashboard/credits")
-        }, 4000)
+        
         
       } catch (error) {
         console.error("Payment processing error:", error)
@@ -79,6 +76,26 @@ export default function PaymentSuccessPage() {
 
     processPayment()
   }, [searchParams, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+              <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+            </div>
+            <CardTitle>Loading...</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-muted-foreground">
+              Checking authentication status...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   if (!user) {
     return (

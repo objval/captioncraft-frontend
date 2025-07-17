@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/client"
 import toast from "react-hot-toast"
 
 interface UploadOptions {

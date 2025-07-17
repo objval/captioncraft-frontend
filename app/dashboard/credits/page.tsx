@@ -29,6 +29,9 @@ import {
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import toast from "react-hot-toast"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import BillingDashboard from "@/components/payments/billing-dashboard"
+import { initiateHypayPayment } from "@/app/actions/payments"
 
 interface CreditPack {
   id: string
@@ -130,15 +133,15 @@ export default function CreditsPage() {
       const loadingToast = toast.loading("Redirecting to payment page...")
       
       // Initiate payment with backend
-      console.log("Calling initiatePayment with ID:", pack.id)
-      const response = await api.initiatePayment(pack.id)
+      console.log("Calling initiateHypayPayment with ID:", pack.id)
+      const { paymentUrl } = await initiateHypayPayment(pack.id)
       
       // Dismiss loading toast
       toast.dismiss(loadingToast)
       
       // Redirect user to Hypay payment page
-      console.log("Redirecting to:", response.paymentPageUrl)
-      window.location.href = response.paymentPageUrl
+      console.log("Redirecting to:", paymentUrl)
+      window.location.href = paymentUrl
       
     } catch (error) {
       console.error("Purchase failed:", error)
@@ -207,9 +210,9 @@ export default function CreditsPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold">Credits</h1>
+        <h1 className="text-2xl font-bold">Credits & Billing</h1>
         <p className="text-muted-foreground">
-          Purchase credits to upload and process your videos
+          Manage your credits, track spending, and view payment history
         </p>
       </div>
 
@@ -274,7 +277,16 @@ export default function CreditsPage() {
         </Card>
       )}
 
-      {/* Credit Packs */}
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="purchase" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="purchase">Buy Credits</TabsTrigger>
+          <TabsTrigger value="billing">Billing Dashboard</TabsTrigger>
+          <TabsTrigger value="help">Help & Info</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="purchase" className="space-y-6">
+          {/* Credit Packs */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Available Credit Packs</h2>
@@ -487,6 +499,71 @@ export default function CreditsPage() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="billing">
+          <BillingDashboard />
+        </TabsContent>
+
+        <TabsContent value="help" className="space-y-6">
+          {/* Help Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                How Credits Work
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Credit Usage</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-blue-500" />
+                      1 credit = 1 video upload
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-blue-500" />
+                      Includes AI transcription
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-blue-500" />
+                      Unlimited editing
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-blue-500" />
+                      Caption burning included
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="space-y-3">
+                  <h4 className="font-medium">Purchase Benefits</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-blue-500" />
+                      No subscription required
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-blue-500" />
+                      Credits never expire
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-blue-500" />
+                      Instant activation
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-blue-500" />
+                      Volume discounts available
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 } 
