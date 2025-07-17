@@ -330,7 +330,7 @@ export async function handlePaymentSuccess(
   if (!IdempotencyService.validateTransactionId(hypayTransactionId)) {
     paymentLogger.log('error', 'invalid_transaction_id', {
       paymentId,
-      hypayTransactionId,
+      transactionId: hypayTransactionId,
       errorMessage: 'Invalid transaction ID format'
     })
     throw new Error('Invalid transaction ID format')
@@ -353,7 +353,7 @@ export async function handlePaymentSuccess(
   if (existingTransaction) {
     paymentLogger.log('error', 'duplicate_transaction_id', {
       paymentId,
-      hypayTransactionId,
+      transactionId: hypayTransactionId,
       existingPaymentId: existingTransaction.id,
       existingStatus: existingTransaction.status,
       errorMessage: 'Transaction ID already exists for different payment'
