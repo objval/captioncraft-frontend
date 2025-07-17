@@ -354,9 +354,11 @@ export async function handlePaymentSuccess(
     paymentLogger.log('error', 'duplicate_transaction_id', {
       paymentId,
       transactionId: hypayTransactionId,
-      existingPaymentId: existingTransaction.id,
-      existingStatus: existingTransaction.status,
-      errorMessage: 'Transaction ID already exists for different payment'
+      errorMessage: 'Transaction ID already exists for different payment',
+      metadata: {
+        existingPaymentId: existingTransaction.id,
+        existingStatus: existingTransaction.status
+      }
     })
     throw new Error('Duplicate transaction ID detected')
   }
@@ -389,6 +391,20 @@ export async function handlePaymentSuccess(
 
     // 2. Update payment status to succeeded
     console.log(`[handlePaymentSuccess] Updating status for payment ${paymentId} to 'succeeded'.`)
+    
+    // Check if transaction ID already exists for a different payment
+    const { data: existingTransaction, error: transactionCheckError } = await supabase
+      .from('payments')
+      .select('id, status')
+      .eq('hypay_transaction_id', hypayTransactionId)
+      .neq('id', paymentId)
+      .single()
+    
+    if (existingTransaction) {
+      console.warn(`[handlePaymentSuccess] Transaction ${hypayTransactionId} already exists for payment ${existingTransaction.id}`)
+      throw new Error(`Transaction ID ${hypayTransactionId} already exists for a different payment`)
+    }
+    
     const { data: updatedPayment, error: updateError } = await supabase
       .from('payments')
       .update({
@@ -398,20 +414,45 @@ export async function handlePaymentSuccess(
         updated_at: new Date().toISOString()
       })
       .eq('id', paymentId)
-      .select('user_id, credit_pack_id, credit_packs(credits_amount)')
+      .select('user_id, credit_pack_id')
       .single()
 
     if (updateError) {
       console.error(`[handlePaymentSuccess] Error updating payment ${paymentId} status:`, updateError)
-      throw new Error(`Failed to update payment status for ${paymentId}`)
+      
+      // Check if the payment still exists after failed update
+      const { data: checkPayment, error: checkError } = await supabase
+        .from('payments')
+        .select('id, status, hypay_transaction_id')
+        .eq('id', paymentId)
+        .single()
+      
+      console.log(`[handlePaymentSuccess] Payment existence check:`, { 
+        exists: !!checkPayment, 
+        payment: checkPayment, 
+        checkError 
+      })
+      
+      throw new Error(`Failed to update payment status for ${paymentId}: ${updateError.message}`)
     }
 
-    // 3. Add credits to user account
-    const creditPack = Array.isArray(updatedPayment.credit_packs)
-      ? updatedPayment.credit_packs[0]
-      : updatedPayment.credit_packs
+    // 3. Get credit pack details and add credits to user account
+    const { data: creditPack, error: creditPackError } = await supabase
+      .from('credit_packs')
+      .select('credits_amount')
+      .eq('id', updatedPayment.credit_pack_id)
+      .single()
 
-    if (creditPack) {
+    if (creditPackError) {
+      console.error(`[handlePaymentSuccess] Error fetching credit pack for payment ${paymentId}:`, creditPackError)
+      paymentLogger.log('error', 'credit_pack_fetch_failed', {
+        paymentId,
+        errorMessage: creditPackError.message,
+        metadata: {
+          creditPackId: updatedPayment.credit_pack_id
+        }
+      })
+    } else if (creditPack) {
       console.log(`[handlePaymentSuccess] Adding ${creditPack.credits_amount} credits to user ${updatedPayment.user_id}.`)
       const { error: creditsError } = await supabase.rpc('add_credits', {
         p_user_id: updatedPayment.user_id,
