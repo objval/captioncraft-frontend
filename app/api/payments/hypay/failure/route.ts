@@ -4,52 +4,31 @@ import { handlePaymentFailure } from '@/app/actions/payments'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    
-    // Extract parameters from Hypay callback
-    const paymentId = searchParams.get('Order') // Order parameter contains our payment ID
-    const hypayTransactionId = searchParams.get('TransId') // Hypay transaction ID (might be empty for failures)
-    const amount = searchParams.get('Amount') // Amount attempted
-    const result = searchParams.get('Result') // Payment result status (not '1' for failures)
-    const errorMessage = searchParams.get('ErrorMessage') // Error message if available
-    const ccode = searchParams.get('CCode') // Hypay error code
+
+    // Expected parameters from Hypay failure callback
+    const orderId = searchParams.get('Order')
+    const ccode = searchParams.get('CCode')
+    const errMsg = searchParams.get('ErrMsg')
+    const transactionId = searchParams.get('Id')
     
     // Validate required parameters
-    if (!paymentId) {
-      console.error('Missing payment ID in failure callback:', {
-        paymentId,
-        hypayTransactionId,
-        amount,
-        result,
-        errorMessage
-      })
-      
-      return NextResponse.redirect(
-        new URL('/dashboard/credits?payment=error', request.url)
-      )
+    if (!orderId || !ccode) {
+      console.error('Missing required failure parameters:', { orderId, ccode })
+      const redirectUrl = new URL('/dashboard/payment/failure', request.url)
+      if (ccode) redirectUrl.searchParams.set('CCode', ccode)
+      if (errMsg) redirectUrl.searchParams.set('ErrMsg', errMsg)
+      return NextResponse.redirect(redirectUrl)
     }
 
-    // Collect all callback data for logging
-    const providerResponse = {
-      TransId: hypayTransactionId,
-      Amount: amount,
-      Result: result,
-      ErrorMessage: errorMessage,
-      Order: paymentId,
-      // Include other potentially useful parameters
-      Masof: searchParams.get('Masof'),
-      UserId: searchParams.get('UserId'),
-      DateTime: searchParams.get('DateTime'),
-      // Add any other parameters Hypay might send
-      ...Object.fromEntries(searchParams.entries())
-    }
+    const providerResponse = Object.fromEntries(searchParams.entries())
 
     console.log('Processing payment failure callback:', providerResponse)
 
-    // Determine failure reason based on CCode or error message
+    // Determine failure reason based on CCode or ErrMsg
     let failureReason = 'Payment failed. Please try again or contact support.'
-    
-    if (errorMessage) {
-      failureReason = decodeURIComponent(errorMessage)
+
+    if (errMsg) {
+      failureReason = decodeURIComponent(errMsg)
     } else if (ccode) {
       switch (ccode) {
         case '0':
@@ -111,19 +90,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Handle the failed payment
-    await handlePaymentFailure(
-      paymentId,
-      failureReason,
-      providerResponse
-    )
+    await handlePaymentFailure(orderId, failureReason, providerResponse)
 
-    // Redirect to failure page with error message
-    const failureUrl = new URL('/dashboard/payment/failure', request.url) // Redirect to the client-side failure page
-    failureUrl.searchParams.set('reason', failureReason)
-    failureUrl.searchParams.set('ccode', ccode || '') // Pass ccode for more specific frontend display
-    
-    return NextResponse.json({ status: 'ok', message: 'Payment failure callback processed' })
+    const failureUrl = new URL('/dashboard/payment/failure', request.url)
+    failureUrl.searchParams.set('CCode', ccode)
+    if (errMsg) failureUrl.searchParams.set('ErrMsg', errMsg)
+    if (transactionId) failureUrl.searchParams.set('Id', transactionId)
+    return NextResponse.redirect(failureUrl)
 
   } catch (error) {
     console.error('Error processing payment failure callback:', error)
