@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { handlePaymentFailure } from '@/app/actions/payments'
+import { verifyPaymentCallback } from '@/lib/hypay-crypto'
+import { getUserErrorMessage, getHypayError } from '@/lib/hypay-error-codes'
+import { paymentLogger } from '@/lib/payment-logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,77 +23,54 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    const providerResponse = Object.fromEntries(searchParams.entries())
+    const callbackParams = Object.fromEntries(searchParams.entries())
 
-    console.log('Processing payment failure callback:', providerResponse)
+    // Log callback received
+    paymentLogger.logCallbackReceived('failure', callbackParams, request)
 
-    // Determine failure reason based on CCode or ErrMsg
+    // Verify callback signature using APISign Step 4 (even for failures)
+    const hypayConfig = {
+      masof: process.env.HYPAY_MASOF!,
+      apiKey: process.env.HYPAY_API_KEY!,
+      passP: process.env.HYPAY_PASS_P!,
+      baseUrl: process.env.HYPAY_BASE_URL!
+    }
+
+    console.log('Verifying failure callback signature...')
+    const verificationResult = await verifyPaymentCallback(callbackParams, hypayConfig)
+
+    if (!verificationResult.isValid) {
+      console.error('Failure callback signature verification failed:', verificationResult.error)
+      paymentLogger.logSignatureVerification(false, orderId, transactionId, verificationResult.error, request)
+      // Even if signature fails, we log this but continue processing
+      // as the failure might be legitimate but from an older flow
+    } else {
+      console.log('Failure callback signature verified successfully')
+      paymentLogger.logSignatureVerification(true, orderId, transactionId, undefined, request)
+    }
+
+    console.log('Processing payment failure callback:', callbackParams)
+
+    // Determine failure reason using comprehensive error mapping
     let failureReason = 'Payment failed. Please try again or contact support.'
 
     if (errMsg) {
       failureReason = decodeURIComponent(errMsg)
     } else if (ccode) {
-      switch (ccode) {
-        case '0':
-          failureReason = 'Payment cancelled by user.'
-          break
-        case '33':
-          failureReason = 'Refund amount is greater than the original transactions amount.'
-          break
-        case '400':
-          failureReason = 'Sum of items differ from transaction amount (invoice module).';
-          break;
-        case '401':
-          failureReason = 'Client name or last name is required.';
-          break;
-        case '402':
-          failureReason = 'Deal information is required.';
-          break;
-        case '600':
-          failureReason = 'Checking card number (J2).';
-          break;
-        case '700':
-          failureReason = 'Approved without charge (J5 credit line reservation).';
-          break;
-        case '800':
-          failureReason = 'Postponed charge.';
-          break;
-        case '901':
-          failureReason = 'Terminal is not permitted to work in this method.';
-          break;
-        case '902':
-          failureReason = 'Authentication error. Verify terminal settings.';
-          break;
-        case '903':
-          failureReason = 'Exceeded maximum number of payments configured in terminal.';
-          break;
-        case '990':
-          failureReason = 'Card details not fully readable. Please pass the card again.';
-          break;
-        case '996':
-          failureReason = 'Terminal is not permitted to use token.';
-          break;
-        case '997':
-          failureReason = 'Token is not valid.';
-          break;
-        case '998':
-          failureReason = 'Deal cancelled by Hypay.';
-          break;
-        case '999':
-          failureReason = 'Communication error with Hypay.';
-          break;
-        default:
-          // For Shva error codes (0-200) and other unmapped Hypay errors
-          if (parseInt(ccode) >= 0 && parseInt(ccode) <= 200) {
-            failureReason = `Payment declined by card issuer (Code: ${ccode}). Please try a different card or contact your bank.`;
-          } else {
-            failureReason = `Payment failed with unknown error code: ${ccode}. Please contact support.`;
-          }
-          break;
-      }
+      failureReason = getUserErrorMessage(ccode)
+      
+      // Log additional error information for monitoring
+      const errorInfo = getHypayError(ccode)
+      console.log('Payment failure details:', {
+        code: ccode,
+        category: errorInfo.category,
+        severity: errorInfo.severity,
+        technicalMessage: errorInfo.technicalMessage,
+        retryable: errorInfo.retryable
+      })
     }
 
-    await handlePaymentFailure(orderId, failureReason, providerResponse)
+    await handlePaymentFailure(orderId, failureReason, callbackParams)
 
     const failureUrl = new URL('/dashboard/payment/failure', request.url)
     failureUrl.searchParams.set('CCode', ccode)
@@ -100,6 +80,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error processing payment failure callback:', error)
+    paymentLogger.logAPIError('payment_failure_callback', error instanceof Error ? error : new Error('Unknown error'), undefined, request)
     return NextResponse.json({ status: 'error', message: 'Failed to process payment failure callback' }, { status: 500 })
   }
 }

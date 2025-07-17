@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { handlePaymentSuccess } from '@/app/actions/payments'
+import { verifyPaymentCallback } from '@/lib/hypay-crypto'
+import { paymentLogger } from '@/lib/payment-logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,8 +13,9 @@ export async function GET(request: NextRequest) {
     const amount = searchParams.get('Amount')
     const ccode = searchParams.get('CCode')
     const hesh = searchParams.get('Hesh')
+    const signature = searchParams.get('Sign')
 
-    // Validate parameters
+    // Validate basic parameters
     if (!orderId || !transactionId || !amount || ccode !== '0') {
       console.error('Invalid success callback parameters:', {
         orderId,
@@ -26,17 +29,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(failureUrl)
     }
 
-    // Collect provider response
-    const providerResponse = Object.fromEntries(searchParams.entries())
+    // Collect all callback parameters for verification
+    const callbackParams = Object.fromEntries(searchParams.entries())
+    
+    // Log callback received
+    paymentLogger.logCallbackReceived('success', callbackParams, request)
+    
+    // Verify callback signature using APISign Step 4
+    const hypayConfig = {
+      masof: process.env.HYPAY_MASOF!,
+      apiKey: process.env.HYPAY_API_KEY!,
+      passP: process.env.HYPAY_PASS_P!,
+      baseUrl: process.env.HYPAY_BASE_URL!
+    }
 
-    console.log('Processing payment success callback:', providerResponse)
+    console.log('Verifying payment callback signature...')
+    const verificationResult = await verifyPaymentCallback(callbackParams, hypayConfig)
+
+    if (!verificationResult.isValid) {
+      console.error('Payment callback signature verification failed:', verificationResult.error)
+      paymentLogger.logSignatureVerification(false, orderId, transactionId, verificationResult.error, request)
+      const failureUrl = new URL('/dashboard/payment/failure', request.url)
+      failureUrl.searchParams.set('CCode', '902') // Authentication error
+      failureUrl.searchParams.set('ErrMsg', 'Signature verification failed')
+      return NextResponse.redirect(failureUrl)
+    }
+
+    console.log('Payment callback signature verified successfully')
+    paymentLogger.logSignatureVerification(true, orderId, transactionId, undefined, request)
+    console.log('Processing payment success callback:', callbackParams)
 
     await handlePaymentSuccess(
       orderId,
       transactionId,
       parseFloat(amount),
       hesh || undefined,
-      providerResponse
+      callbackParams
     )
 
     const redirectUrl = new URL('/dashboard/payment/success', request.url)
@@ -45,6 +73,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error processing payment success callback:', error)
+    paymentLogger.logAPIError('payment_success_callback', error instanceof Error ? error : new Error('Unknown error'), undefined, request)
     return NextResponse.json({ status: 'error', message: 'Failed to process payment success callback' }, { status: 500 })
   }
 }

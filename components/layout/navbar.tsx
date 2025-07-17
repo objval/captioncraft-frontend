@@ -42,9 +42,9 @@ export function Navbar({ onSidebarToggle, showSidebarToggle = false }: NavbarPro
 
             <Link href="/dashboard" className="flex items-center space-x-3">
               <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-base">CC</span>
+                <span className="text-white font-bold text-base">K</span>
               </div>
-              <span className="font-bold text-xl text-slate-800 tracking-tight">CaptionCraft</span>
+              <span className="font-bold text-xl text-slate-800 tracking-tight">Kalil</span>
             </Link>
           </div>
 

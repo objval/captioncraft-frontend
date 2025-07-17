@@ -4,14 +4,16 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { generatePrintHeshUrl } from '@/lib/invoices'
+import { requestHypaySignature, sanitizeParams } from '@/lib/hypay-crypto'
+import { paymentLogger } from '@/lib/payment-logger'
+import { getHypayConfig, logTestEnvironmentStatus, createTestModePayment } from '@/lib/hypay-test-utils'
+import { IdempotencyService, withIdempotency } from '@/lib/idempotency'
 
-// Hypay credentials from your docs
-const HYPAY_CONFIG = {
-  masof: '4501961334',
-  userId: '2005822', // Your fixed UserId from docs
-  passP: 'vxvxfvfx456',
-  baseUrl: 'https://pay.hyp.co.il/p/'
-}
+// Get Hypay configuration (automatically switches between test/production)
+const HYPAY_CONFIG = getHypayConfig()
+
+// Log environment status on module load
+logTestEnvironmentStatus()
 
 interface HypayClientData {
   clientName: string
@@ -86,19 +88,18 @@ async function getClientDataFromAuth(): Promise<HypayClientData> {
 }
 
 /**
- * Generate Hypay payment URL with all required parameters
+ * Generate secure Hypay payment URL using APISign Step 1
  */
-function generateHypayUrl(
+async function generateSecureHypayUrl(
   creditPack: CreditPack,
   clientData: HypayClientData,
   paymentId: string
-): string {
-  const params = new URLSearchParams({
+): Promise<string> {
+  // Prepare payment parameters
+  const paymentParams = {
     // Core Hypay parameters
-    action: 'pay',
     Masof: HYPAY_CONFIG.masof,
     UserId: HYPAY_CONFIG.userId,
-    PassP: HYPAY_CONFIG.passP,
     
     // Transaction details
     Order: paymentId, // Use our payment ID as order reference
@@ -113,8 +114,14 @@ function generateHypayUrl(
     // Technical parameters
     UTF8: 'True',
     UTF8out: 'True',
-    pageTimeOut: 'True', // Recommended by Hypay for 20-minute timeout
+    Sign: 'True', // Enable signature verification
+    MoreData: 'True', // Get enhanced transaction information
+    pageTimeOut: 'True', // 20-minute payment page timeout
     sendemail: 'True', // Send payment confirmation email to customer
+    
+    // Success and failure callback URLs
+    SuccessUrl: 'https://kalil.pro/api/payments/hypay/success',
+    FailureUrl: 'https://kalil.pro/api/payments/hypay/failure',
     
     // Client information
     ClientName: clientData.clientName,
@@ -128,10 +135,32 @@ function generateHypayUrl(
     // EzCount invoice parameters for automatic invoice generation
     SendHesh: 'True', // Send invoice by email
     Pritim: 'True', // Invoice contains items
+    blockItemValidation: 'True', // Strict validation of item totals
     heshDesc: `[0~${creditPack.name}~1~${creditPack.price_nis}]`, // Item description
-  })
+  }
 
-  return `${HYPAY_CONFIG.baseUrl}?${params.toString()}`
+  // Sanitize parameters
+  const sanitizedParams = sanitizeParams(paymentParams)
+
+  try {
+    // Step 1: Request signature from Hypay using APISign
+    const { signedParams, signature } = await requestHypaySignature(sanitizedParams, {
+      ...HYPAY_CONFIG,
+      testMode: HYPAY_CONFIG.testMode
+    })
+
+    // Step 2: Generate the final payment URL with signature
+    const finalParams = new URLSearchParams({
+      action: 'pay',
+      ...signedParams,
+      signature: signature
+    })
+
+    return `${HYPAY_CONFIG.baseUrl}?${finalParams.toString()}`
+  } catch (error) {
+    console.error('Failed to generate secure payment URL:', error)
+    throw new Error(`Payment URL generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
 } 
 
 /**
@@ -141,91 +170,154 @@ async function createPaymentRecord(
   userId: string,
   creditPackId: string,
   amount: number,
-  paymentUrl: string // New parameter for the payment URL
+  paymentUrl: string, // New parameter for the payment URL
+  idempotencyKey?: string
 ): Promise<string> {
   const supabase = await createClient()
   
+  // Prepare payment data
+  const paymentData: any = {
+    user_id: userId,
+    credit_pack_id: creditPackId,
+    amount: amount,
+    status: 'pending',
+    payment_url: paymentUrl,
+    idempotency_key: idempotencyKey
+  }
+
+  // Add test mode flag if in test environment (graceful fallback if column doesn't exist)
+  if (HYPAY_CONFIG.testMode) {
+    paymentData.test_mode = true
+    console.log('Creating test mode payment record')
+  }
+  
   const { data, error } = await supabase
     .from('payments')
-    .insert({
-      user_id: userId,
-      credit_pack_id: creditPackId,
-      amount: amount,
-      status: 'pending',
-      payment_url: paymentUrl // Store the payment URL
-    })
+    .insert(paymentData)
     .select('id')
     .single()
 
   if (error) {
+    // If test_mode column doesn't exist, try without it
+    if (error.message?.includes('test_mode') && HYPAY_CONFIG.testMode) {
+      console.log('test_mode column not found, retrying without it...')
+      delete paymentData.test_mode
+      
+      const { data: retryData, error: retryError } = await supabase
+        .from('payments')
+        .insert(paymentData)
+        .select('id')
+        .single()
+        
+      if (retryError) {
+        console.error('Error creating payment record (retry):', retryError)
+        throw new Error(`Failed to create payment record: ${retryError.message}`)
+      }
+      
+      console.log(`✅ Created payment record (without test_mode): ${retryData.id}`)
+      return retryData.id
+    }
+    
     console.error('Error creating payment record:', error)
-    throw new Error('Failed to create payment record')
+    console.error('Payment data:', paymentData)
+    throw new Error(`Failed to create payment record: ${error.message}`)
+  }
+
+  // Log test payment creation if in test mode
+  if (HYPAY_CONFIG.testMode) {
+    console.log(`✅ Created test payment record: ${data.id}`)
   }
 
   return data.id
 }
 
 /**
- * Server action to initiate Hypay payment
+ * Server action to initiate Hypay payment with idempotency
  */
-export async function initiateHypayPayment(creditPackId: string): Promise<{ paymentUrl: string }> {
-  try {
-    const supabase = await createClient()
-    
-    // 1. Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      throw new Error('Authentication required')
-    }
-
-    // 2. Fetch credit pack details
-    const { data: creditPack, error: packError } = await supabase
-      .from('credit_packs')
-      .select('*')
-      .eq('id', creditPackId)
-      .single()
-
-    if (packError || !creditPack) {
-      throw new Error('Credit pack not found')
-    }
-
-    // 3. Get client data from auth metadata
-    const clientData = await getClientDataFromAuth()
-
-    // 4. Create payment record with a temporary paymentId for URL generation
-    // The actual paymentId will be generated by Supabase, so we'll update the URL later.
-    const tempPaymentId = crypto.randomUUID(); // Generate a temporary UUID
-    const tempPaymentUrl = generateHypayUrl(creditPack, clientData, tempPaymentId);
-
-    const paymentId = await createPaymentRecord(
-      user.id,
-      creditPackId,
-      creditPack.price_nis,
-      tempPaymentUrl // Store the temporary URL initially
-    );
-
-    // 5. Generate the final Hypay payment URL with the actual paymentId
-    const finalPaymentUrl = generateHypayUrl(creditPack, clientData, paymentId);
-
-    // 6. Update the payment record with the final URL
-    await supabase
-      .from('payments')
-      .update({ payment_url: finalPaymentUrl })
-      .eq('id', paymentId);
-
-    console.log('Generated Hypay URL:', finalPaymentUrl)
-
-    return { paymentUrl: finalPaymentUrl }
-
-  } catch (error) {
-    console.error('Payment initiation error:', error)
-    throw new Error(error instanceof Error ? error.message : 'Payment initiation failed')
+export async function initiateHypayPayment(
+  creditPackId: string,
+  idempotencyKey?: string
+): Promise<{ paymentUrl: string }> {
+  const finalIdempotencyKey = idempotencyKey || IdempotencyService.generateIdempotencyKey()
+  
+  const requestParams = {
+    creditPackId,
+    action: 'initiate_payment',
+    timestamp: Date.now()
   }
+
+  return await withIdempotency(
+    finalIdempotencyKey,
+    requestParams,
+    async () => {
+      const supabase = await createClient()
+      
+      // 1. Authenticate user
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        paymentLogger.log('error', 'payment_initiation_failed', {
+          errorMessage: 'Authentication required',
+          metadata: { creditPackId, idempotencyKey: finalIdempotencyKey }
+        })
+        throw new Error('Authentication required')
+      }
+
+      // 2. Fetch credit pack details
+      const { data: creditPack, error: packError } = await supabase
+        .from('credit_packs')
+        .select('*')
+        .eq('id', creditPackId)
+        .single()
+
+      if (packError || !creditPack) {
+        throw new Error('Credit pack not found')
+      }
+
+      // 3. Get client data from auth metadata
+      const clientData = await getClientDataFromAuth()
+
+      // 4. Create payment record first to get the actual paymentId
+      const paymentId = await createPaymentRecord(
+        user.id,
+        creditPackId,
+        creditPack.price_nis,
+        '', // We'll update this with the secure URL
+        finalIdempotencyKey
+      );
+
+      // Log payment initiation
+      paymentLogger.logPaymentInitiated(paymentId, user.id, creditPack.price_nis, creditPackId)
+
+      // 5. Generate the secure Hypay payment URL with APISign Step 1
+      const securePaymentUrl = await generateSecureHypayUrl(creditPack, clientData, paymentId);
+
+      // 6. Update the payment record with the secure signed URL
+      await supabase
+        .from('payments')
+        .update({ payment_url: securePaymentUrl })
+        .eq('id', paymentId);
+
+      paymentLogger.log('info', 'secure_payment_url_generated', {
+        paymentId,
+        userId: user.id,
+        amount: creditPack.price_nis,
+        metadata: { 
+          creditPackId, 
+          urlLength: securePaymentUrl.length,
+          idempotencyKey: finalIdempotencyKey
+        }
+      })
+
+      console.log('Generated secure Hypay URL:', securePaymentUrl)
+
+      return { paymentUrl: securePaymentUrl }
+    }
+  )
 }
 
 /**
- * Handle successful payment callback from Hypay
+ * Handle successful payment callback from Hypay with transaction validation
  */
 export async function handlePaymentSuccess(
   paymentId: string,
@@ -234,8 +326,43 @@ export async function handlePaymentSuccess(
   invoiceNumber?: string,
   providerResponse?: any
 ) {
+  // Validate transaction ID format
+  if (!IdempotencyService.validateTransactionId(hypayTransactionId)) {
+    paymentLogger.log('error', 'invalid_transaction_id', {
+      paymentId,
+      hypayTransactionId,
+      errorMessage: 'Invalid transaction ID format'
+    })
+    throw new Error('Invalid transaction ID format')
+  }
   const supabase = await createClient()
   console.log(`[handlePaymentSuccess] Processing paymentId: ${paymentId}`)
+
+  // Check for duplicate transaction ID
+  const { data: existingTransaction, error: duplicateError } = await supabase
+    .from('payments')
+    .select('id, status')
+    .eq('hypay_transaction_id', hypayTransactionId)
+    .neq('id', paymentId) // Exclude current payment
+    .single()
+
+  if (duplicateError && duplicateError.code !== 'PGRST116') {
+    throw duplicateError
+  }
+
+  if (existingTransaction) {
+    paymentLogger.log('error', 'duplicate_transaction_id', {
+      paymentId,
+      hypayTransactionId,
+      existingPaymentId: existingTransaction.id,
+      existingStatus: existingTransaction.status,
+      errorMessage: 'Transaction ID already exists for different payment'
+    })
+    throw new Error('Duplicate transaction ID detected')
+  }
+
+  // Log payment success callback received
+  paymentLogger.logPaymentSuccess(paymentId, hypayTransactionId, amount, invoiceNumber)
 
   try {
     // 1. Check current payment status for idempotency
@@ -293,9 +420,16 @@ export async function handlePaymentSuccess(
 
       if (creditsError) {
         console.error(`[handlePaymentSuccess] Error adding credits for user ${updatedPayment.user_id}:`, creditsError)
+        paymentLogger.log('error', 'credits_addition_failed', {
+          paymentId,
+          userId: updatedPayment.user_id,
+          errorMessage: creditsError.message,
+          metadata: { creditsAmount: creditPack.credits_amount }
+        })
         // Decide if this error should prevent success. For now, we log and continue.
       } else {
         console.log(`[handlePaymentSuccess] Credits added successfully for user ${updatedPayment.user_id}.`)
+        paymentLogger.logCreditsAdded(updatedPayment.user_id, creditPack.credits_amount, paymentId)
       }
     } else {
       console.warn(`[handlePaymentSuccess] Credit pack details not found for payment ${paymentId}. Credits not added.`)
@@ -320,8 +454,14 @@ export async function handlePaymentSuccess(
 
       if (invoiceError) {
         console.error(`[handlePaymentSuccess] Error upserting invoice for payment ${paymentId}:`, invoiceError)
+        paymentLogger.log('error', 'invoice_generation_failed', {
+          paymentId,
+          transactionId: hypayTransactionId,
+          errorMessage: invoiceError.message
+        })
       } else {
         console.log(`[handlePaymentSuccess] Invoice record saved for payment ${paymentId}.`)
+        paymentLogger.logInvoiceGenerated(paymentId, invoiceNumber, invoiceUrl)
       }
     } else {
       console.log(`[handlePaymentSuccess] No invoice number provided for payment ${paymentId}. Skipping invoice record creation.`)
@@ -351,6 +491,10 @@ export async function handlePaymentFailure(
 ) {
   const supabase = await createClient()
   console.log(`[handlePaymentFailure] Processing paymentId: ${paymentId} with reason: ${failureReason}`)
+
+  // Log payment failure
+  const errorCode = providerResponse?.CCode || 'unknown'
+  paymentLogger.logPaymentFailure(paymentId, errorCode, failureReason, providerResponse?.Id)
 
   try {
     // 1. Check current payment status to avoid unnecessary updates
