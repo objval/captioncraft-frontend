@@ -3,7 +3,13 @@
     "allow": [
       "Bash(curl:*)",
       "Bash(cat:*)",
-      "mcp__supabase__list_tables"
+      "mcp__supabase__list_tables",
+      "mcp__supabase__list_extensions",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "mcp__supabase__execute_sql",
+      "Bash(npm ls:*)",
+      "mcp__supabase__apply_migration"
     ],
     "deny": []
   }

@@ -2,26 +2,22 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAuth } from "@/components/providers/auth-provider"
 import { getUserPayments } from "@/lib/payments"
+import { StatusBadge, StatusIcon } from "@/components/shared/StatusBadge"
 import { 
   Search, 
   Filter, 
   Download, 
-  Eye, 
-  CheckCircle2, 
-  Clock, 
-  XCircle,
+  Eye,
   Receipt,
   Calendar,
   DollarSign,
   CreditCard,
-  AlertCircle,
   ExternalLink,
   RefreshCw
 } from "lucide-react"
@@ -144,32 +140,7 @@ export default function PaymentHistory() {
     setFilteredPayments(filtered)
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'succeeded':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />
-      case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />
-    }
-  }
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      succeeded: "default",
-      pending: "secondary",
-      failed: "destructive"
-    } as const
-
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || "outline"}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    )
-  }
+  // Status helpers are now imported from shared utilities
 
   const downloadInvoice = async (payment: Payment) => {
     const invoice = payment.invoices?.[0]
@@ -435,10 +406,7 @@ export default function PaymentHistory() {
                       </TableCell>
                       
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(payment.status)}
-                          {getStatusBadge(payment.status)}
-                        </div>
+                        <StatusBadge status={payment.status} showIcon={true} />
                       </TableCell>
                       
                       <TableCell>

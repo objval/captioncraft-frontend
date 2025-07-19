@@ -3,567 +3,611 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
-import { useTransactions, getTransactionDisplayName } from "@/hooks/use-transactions"
+import { useTransactions } from "@/hooks/use-transactions"
 import { getCreditPacks } from "@/lib/credit-packs"
-import { getUserProfile } from "@/lib/profiles"
-import { api } from "@/lib/api"
+import { getUserPayments } from "@/lib/payments"
+import { StatusBadge } from "@/components/shared/StatusBadge"
+import { DateDisplay } from "@/components/shared/DateDisplay"
+import { EmptyState } from "@/components/shared/EmptyState"
+import { formatTransactionReason } from "@/lib/utils/transaction-helpers"
 import { 
   Coins, 
   CreditCard, 
-  Check, 
-  Star, 
-  Zap, 
-  Crown, 
-  Shield, 
   TrendingUp,
-  Activity,
-  ArrowRight,
+  TrendingDown,
+  Package,
+  Receipt,
+  AlertCircle,
+  ChevronRight,
+  Sparkles,
+  FileText,
+  ExternalLink,
   Gift,
-  Clock,
-  Info
+  RefreshCcw,
+  Users,
+  Tag,
+  Video,
+  Captions
 } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
+import type { CreditPack, Payment } from "@/lib/api"
 import toast from "react-hot-toast"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import BillingDashboard from "@/components/payments/billing-dashboard"
-import { initiateHypayPayment } from "@/app/actions/payments"
-
-interface CreditPack {
-  id: string
-  name: string
-  credits_amount: number
-  price_nis: number
-  popular?: boolean
-  bonus?: number
-}
+import { createPayment } from "@/app/actions/payments"
 
 export default function CreditsPage() {
   const { user } = useAuth()
   const { credits, loading: creditsLoading } = useCreditBalance(user?.id)
   const { transactions, loading: transactionsLoading } = useTransactions(user?.id)
-  
   const [creditPacks, setCreditPacks] = useState<CreditPack[]>([])
-  const [loading, setLoading] = useState(true)
+  const [payments, setPayments] = useState<Payment[]>([])
   const [purchasing, setPurchasing] = useState<string | null>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [profileLoading, setProfileLoading] = useState(true)
+  const [loadingPacks, setLoadingPacks] = useState(true)
+  const [loadingPayments, setLoadingPayments] = useState(true)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
-  // Load credit packs and transactions
   useEffect(() => {
     const loadData = async () => {
-      try {
-        // Load credit packs
-        const packs = await getCreditPacks()
-        
-        // Add popular flag and bonus for display
-        const enhancedPacks = packs.map((pack: any) => ({
-          ...pack,
-          popular: pack.credits_amount === 10, // Pro pack with 10 credits is popular
-          bonus: pack.credits_amount >= 50 ? Math.floor(pack.credits_amount * 0.1) : 0
-        }))
-        
-        setCreditPacks(enhancedPacks)
-      } catch (error) {
-        console.error("Failed to load credit data:", error)
-        toast.error("Failed to load credit information")
-      } finally {
-        setLoading(false)
-      }
+      await Promise.all([
+        loadCreditPacks(),
+        user?.id ? loadPayments() : Promise.resolve()
+      ])
+      setIsInitialLoad(false)
     }
-
     loadData()
-  }, [])
-
-  // Load user profile for payment validation
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!user?.id) return
-      
-      try {
-        const profileData = await getUserProfile()
-        setProfile(profileData)
-      } catch (error) {
-        console.error("Failed to load profile:", error)
-      } finally {
-        setProfileLoading(false)
-      }
-    }
-
-    loadProfile()
   }, [user?.id])
 
-  const isProfileComplete = () => {
-    if (!profile) return false
-    return !!(
-      profile.first_name &&
-      profile.last_name &&
-      profile.phone_number &&
-      profile.street &&
-      profile.city
-    )
+  const loadCreditPacks = async () => {
+    try {
+      const packs = await getCreditPacks()
+      setCreditPacks(packs)
+    } catch (error) {
+      console.error("Error loading credit packs:", error)
+      toast.error("Failed to load credit packs")
+    } finally {
+      setLoadingPacks(false)
+    }
+  }
+
+  const loadPayments = async () => {
+    try {
+      const userPayments = await getUserPayments()
+      setPayments(userPayments)
+    } catch (error) {
+      console.error("Error loading payments:", error)
+    } finally {
+      setLoadingPayments(false)
+    }
   }
 
   const handlePurchase = async (pack: CreditPack) => {
-    console.log("Attempting purchase for pack:", pack)
-    
-    if (!user?.id) {
-      toast.error("Please sign in to purchase credits")
-      return
-    }
-
-    // Check if profile is complete before allowing payment
-    if (!isProfileComplete()) {
-      toast.error("Please complete your profile before making a purchase")
-      // Redirect to profile page with a message
-      setTimeout(() => {
-        window.location.href = "/dashboard/profile"
-      }, 1500)
+    if (!user) {
+      toast.error("Please login to purchase credits")
       return
     }
 
     setPurchasing(pack.id)
-    
     try {
-      // Show loading toast
-      const loadingToast = toast.loading("Redirecting to payment page...")
-      
-      // Initiate payment with backend
-      console.log("Calling initiateHypayPayment with ID:", pack.id)
-      const { paymentUrl } = await initiateHypayPayment(pack.id)
-      
-      // Dismiss loading toast
-      toast.dismiss(loadingToast)
-      
-      // Redirect user to Hypay payment page
-      console.log("Redirecting to:", paymentUrl)
-      window.location.href = paymentUrl
-      
+      const result = await createPayment(pack.id)
+      if (result.paymentUrl) {
+        window.location.href = result.paymentUrl
+      }
     } catch (error) {
-      console.error("Purchase failed:", error)
-      toast.error("Failed to initiate payment. Please try again.")
+      console.error("Purchase error:", error)
+      toast.error("Failed to initiate purchase. Please try again.")
     } finally {
       setPurchasing(null)
     }
   }
 
-  const getPackIcon = (pack: CreditPack) => {
-    if (pack.credits_amount >= 100) return <Crown className="h-6 w-6" />
-    if (pack.credits_amount >= 50) return <Shield className="h-6 w-6" />
-    if (pack.credits_amount >= 20) return <Zap className="h-6 w-6" />
-    return <Coins className="h-6 w-6" />
-  }
+  // Calculate stats
+  const successfulPayments = payments.filter(p => p.status === 'succeeded')
+  const totalSpent = successfulPayments.reduce((sum, p) => sum + p.amount, 0)
+  const invoiceCount = successfulPayments.filter(p => p.invoices?.[0]?.invoice_url).length
 
-  const getPackColor = (pack: CreditPack) => {
-    if (pack.credits_amount >= 100) return "from-purple-500 to-purple-600"
-    if (pack.credits_amount >= 50) return "from-blue-500 to-blue-600"
-    if (pack.credits_amount >= 20) return "from-green-500 to-green-600"
-    return "from-gray-500 to-gray-600"
-  }
+  const totalCreditsEarned = transactions
+    .filter(t => t.amount_changed > 0)
+    .reduce((sum, t) => sum + t.amount_changed, 0)
 
-  const getTransactionIcon = (amount: number) => {
-    return amount > 0 ? (
-              <TrendingUp className="h-4 w-4 text-blue-500" />
-    ) : (
-              <Activity className="h-4 w-4 text-slate-500" />
-    )
-  }
+  const totalCreditsUsed = transactions
+    .filter(t => t.amount_changed < 0)
+    .reduce((sum, t) => sum + Math.abs(t.amount_changed), 0)
 
-  const calculateValuePerCredit = (pack: CreditPack) => {
-    return (pack.price_nis / pack.credits_amount).toFixed(2)
-  }
+  const creditPercentage = totalCreditsEarned > 0 
+    ? ((totalCreditsEarned - totalCreditsUsed) / totalCreditsEarned) * 100
+    : 0
 
-  const getBestValue = () => {
-    if (creditPacks.length === 0) return null
-    return creditPacks.reduce((best, pack) => 
-      parseFloat(calculateValuePerCredit(pack)) < parseFloat(calculateValuePerCredit(best)) ? pack : best
-    )
-  }
-
-  if (loading || creditsLoading || transactionsLoading || profileLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-20 bg-gray-300 rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  const bestValue = getBestValue()
+  const isLowCredits = credits < 10
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold">Credits & Billing</h1>
-        <p className="text-muted-foreground">
-          Manage your credits, track spending, and view payment history
+      <div>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+          Billing & Credits
+        </h1>
+        <p className="text-slate-600 mt-1">
+          Manage your credits and view your billing history
         </p>
       </div>
 
-      {/* Current Balance */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-                          <Coins className="h-5 w-5 text-blue-600" />
-            Current Balance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-3xl font-bold">{credits}</div>
-              <div className="text-sm text-muted-foreground">Available credits</div>
+      {/* Credit Overview Card */}
+      <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-slate-50">
+        <CardContent className="p-0">
+          <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+            {/* Current Balance */}
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    <Coins className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Current Balance</p>
+                    <p className="text-3xl font-bold text-slate-900">
+                      {creditsLoading ? (
+                        <span className="inline-block h-9 w-16 bg-slate-200 rounded animate-pulse" />
+                      ) : (
+                        credits
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {isLowCredits && (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                  <p className="text-sm text-amber-700">
+                    Running low on credits. Top up to continue processing videos.
+                  </p>
+                </div>
+              )}
+              
+              {!isLowCredits && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Credit Usage</span>
+                    <span className="font-medium">{creditPercentage.toFixed(0)}% remaining</span>
+                  </div>
+                  <Progress value={creditPercentage} className="h-2" />
+                  <p className="text-xs text-slate-500">
+                    {totalCreditsUsed} of {totalCreditsEarned} credits used
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="text-right">
-              <div className="text-sm text-muted-foreground">Each credit = 1 video upload</div>
-              <div className="text-sm text-muted-foreground">Enough for {credits} videos</div>
+
+            {/* Total Spent */}
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Total Spent</p>
+                  <p className="text-3xl font-bold text-slate-900">
+                    {loadingPayments ? (
+                      <span className="inline-block h-9 w-24 bg-slate-200 rounded animate-pulse" />
+                    ) : (
+                      <>₪{totalSpent.toFixed(2)}</>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-slate-600">
+                  Across {successfulPayments.length} purchases
+                </p>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <FileText className="h-3 w-3" />
+                  <span>{invoiceCount} invoices available</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Credits Used */}
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 text-white">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Credits Processed</p>
+                  <p className="text-3xl font-bold text-slate-900">
+                    {transactionsLoading ? (
+                      <span className="inline-block h-9 w-12 bg-slate-200 rounded animate-pulse" />
+                    ) : (
+                      totalCreditsUsed
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-slate-600">
+                  Videos processed: {transactions.filter(t => t.amount_changed < 0).length}
+                </p>
+                <p className="text-xs text-slate-500">
+                  Average: 1 credit per video
+                </p>
+              </div>
             </div>
           </div>
-
-          {credits < 5 && (
-                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center gap-2 text-blue-800">
-                <Info className="h-4 w-4" />
-                <span className="text-sm font-medium">Low Credit Warning</span>
-              </div>
-              <p className="text-sm text-blue-700 mt-1">
-                You're running low on credits. Consider purchasing more to continue uploading videos.
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
 
-      {/* Profile Completion Warning */}
-      {!isProfileComplete() && (
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 p-2 bg-amber-100 rounded-full">
-                <Info className="h-4 w-4 text-amber-600" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-medium text-amber-900">Complete Your Profile</h3>
-                <p className="text-sm text-amber-700">
-                  Please complete your profile information (name, phone, and address) before making a purchase. 
-                  This information is required for payment processing and invoice generation.
-                </p>
-                <Button 
-                  size="sm" 
-                  onClick={() => window.location.href = "/dashboard/profile"}
-                  className="bg-amber-600 hover:bg-amber-700 text-white"
-                >
-                  Complete Profile
-                </Button>
-              </div>
+      {/* Quick Purchase Section */}
+      <div id="buy-credits">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-slate-900">Buy Credits</h2>
+          <p className="text-sm text-slate-600">1 credit = 1 video upload</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {loadingPacks ? (
+            // Loading state for credit packs
+            Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-5 w-5 bg-slate-200 rounded" />
+                    <div className="h-5 w-24 bg-slate-200 rounded" />
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="h-8 w-20 bg-slate-200 rounded mb-1" />
+                      <div className="h-4 w-16 bg-slate-200 rounded" />
+                    </div>
+                    <div className="pt-3 border-t border-slate-200">
+                      <div className="h-7 w-16 bg-slate-200 rounded mb-1" />
+                      <div className="h-3 w-24 bg-slate-200 rounded" />
+                    </div>
+                    <div className="h-10 w-full bg-slate-200 rounded" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            creditPacks.map((pack) => {
+            const isPopular = pack.credits_amount === 100
+            const pricePerCredit = pack.price_nis / pack.credits_amount
+            
+            return (
+              <Card 
+                key={pack.id} 
+                className={`relative overflow-hidden transition-all hover:shadow-lg hover:scale-105 cursor-pointer ${
+                  isPopular ? 'ring-2 ring-blue-500 shadow-lg' : ''
+                }`}
+                onClick={() => handlePurchase(pack)}
+              >
+                {isPopular && (
+                  <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
+                    POPULAR
+                  </div>
+                )}
+                
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Package className="h-5 w-5 text-slate-600" />
+                    <h3 className="font-semibold text-lg">{pack.name}</h3>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-3xl font-bold text-slate-900">{pack.credits_amount}</p>
+                      <p className="text-sm text-slate-600">credits</p>
+                    </div>
+                    
+                    <div className="pt-3 border-t border-slate-200">
+                      <p className="text-2xl font-bold text-slate-900">₪{pack.price_nis}</p>
+                      <p className="text-xs text-slate-600">₪{pricePerCredit.toFixed(2)} per credit</p>
+                    </div>
+                    
+                    <Button 
+                      className="w-full"
+                      variant={isPopular ? "default" : "outline"}
+                      disabled={purchasing === pack.id}
+                    >
+                      {purchasing === pack.id ? (
+                        <span className="flex items-center gap-2">
+                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Processing...
+                        </span>
+                      ) : (
+                        <>Purchase</>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+            })
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Transactions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-slate-600" />
+              Recent Credit Usage
+            </CardTitle>
+            <CardDescription>Your latest video processing activity</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {transactionsLoading ? (
+                // Loading state for transactions
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-slate-200" />
+                      <div>
+                        <div className="h-4 w-32 bg-slate-200 rounded mb-1" />
+                        <div className="h-3 w-20 bg-slate-200 rounded" />
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-4 w-12 bg-slate-200 rounded mb-1" />
+                      <div className="h-3 w-20 bg-slate-200 rounded" />
+                    </div>
+                  </div>
+                ))
+              ) : transactions.length === 0 ? (
+                <EmptyState
+                  icon={Coins}
+                  title="No transactions yet"
+                  description="Your credit usage will appear here when you process videos"
+                  className="py-8"
+                />
+              ) : (
+                transactions.slice(0, 5).map((transaction) => {
+                  const reason = transaction.reason?.toLowerCase() || ''
+                  const isCredit = transaction.amount_changed > 0
+                  
+                  // Determine icon based on transaction type
+                  let Icon = isCredit ? TrendingUp : Video
+                  if (isCredit) {
+                    if (reason.includes('purchase')) Icon = CreditCard
+                    else if (reason.includes('bonus')) Icon = Gift
+                    else if (reason.includes('welcome')) Icon = Sparkles
+                    else if (reason.includes('refund')) Icon = RefreshCcw
+                    else if (reason.includes('referral')) Icon = Users
+                    else if (reason.includes('promo')) Icon = Tag
+                  } else {
+                    if (reason.includes('caption') || reason.includes('burning')) Icon = Captions
+                    else if (reason.includes('transcription')) Icon = FileText
+                  }
+                  
+                  return (
+                    <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          isCredit
+                            ? 'bg-green-100 text-green-600' 
+                            : 'bg-blue-100 text-blue-600'
+                        }`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">
+                            {formatTransactionReason(transaction.reason)}
+                          </p>
+                          <DateDisplay date={transaction.created_at} format="relative" className="text-xs text-slate-500" />
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${
+                          isCredit ? 'text-green-600' : 'text-slate-700'
+                        }`}>
+                          {isCredit ? '+' : ''}{transaction.amount_changed}
+                        </p>
+                        <p className="text-xs text-slate-500">Balance: {transaction.balance_after}</p>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Payments */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-slate-600" />
+              Purchase History
+            </CardTitle>
+            <CardDescription>Your recent credit purchases</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {loadingPayments ? (
+                // Loading state for payments
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-slate-200" />
+                      <div>
+                        <div className="h-4 w-28 bg-slate-200 rounded mb-1" />
+                        <div className="h-3 w-20 bg-slate-200 rounded" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <div className="h-4 w-16 bg-slate-200 rounded mb-1" />
+                        <div className="h-3 w-20 bg-slate-200 rounded" />
+                      </div>
+                      <div className="h-6 w-16 bg-slate-200 rounded-full" />
+                    </div>
+                  </div>
+                ))
+              ) : payments.length === 0 ? (
+                <EmptyState
+                  icon={CreditCard}
+                  title="No purchases yet"
+                  description="Your purchase history will appear here after your first credit purchase"
+                  action={{
+                    label: "Buy Credits",
+                    onClick: () => document.getElementById('buy-credits')?.scrollIntoView({ behavior: 'smooth' }),
+                    variant: "outline"
+                  }}
+                  className="py-8"
+                />
+              ) : (
+                payments.slice(0, 5).map((payment) => {
+                  const invoice = payment.invoices?.[0]
+                  const hasInvoice = invoice?.invoice_url && payment.status === 'succeeded'
+                  
+                  return (
+                  <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-slate-100">
+                        <CreditCard className="h-4 w-4 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">
+                          {payment.credit_pack?.name || 'Credit Purchase'}
+                        </p>
+                        <DateDisplay date={payment.created_at} format="relative" className="text-xs text-slate-500" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <p className="font-semibold">₪{payment.amount.toFixed(2)}</p>
+                        <p className="text-xs text-slate-500">
+                          {payment.credit_pack?.credits_amount || 0} credits
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <StatusBadge status={payment.status} showIcon={false} className="text-xs" />
+                        {hasInvoice && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              window.open(invoice.invoice_url, '_blank')
+                            }}
+                            title="View Invoice"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  )
+                })
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Full Purchase History with Invoices */}
+      {payments.length > 5 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Receipt className="h-5 w-5 text-slate-600" />
+                Complete Purchase History
+              </span>
+              <span className="text-sm font-normal text-slate-600">
+                {payments.filter(p => p.status === 'succeeded').length} successful purchases
+              </span>
+            </CardTitle>
+            <CardDescription>All your credit purchases with downloadable invoices</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-3 px-4 font-medium text-sm text-slate-700">Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-sm text-slate-700">Package</th>
+                    <th className="text-right py-3 px-4 font-medium text-sm text-slate-700">Credits</th>
+                    <th className="text-right py-3 px-4 font-medium text-sm text-slate-700">Amount</th>
+                    <th className="text-center py-3 px-4 font-medium text-sm text-slate-700">Status</th>
+                    <th className="text-center py-3 px-4 font-medium text-sm text-slate-700">Invoice</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((payment) => {
+                    const invoice = payment.invoices?.[0]
+                    const hasInvoice = invoice?.invoice_url && payment.status === 'succeeded'
+                    
+                    return (
+                      <tr key={payment.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-4">
+                          <DateDisplay date={payment.created_at} format="smart" className="text-sm text-slate-600" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="font-medium text-sm">{payment.credit_pack?.name || 'Credit Purchase'}</p>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <p className="text-sm font-medium">{payment.credit_pack?.credits_amount || 0}</p>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <p className="font-semibold text-sm">₪{payment.amount.toFixed(2)}</p>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <StatusBadge status={payment.status} showIcon={true} className="text-xs" />
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {hasInvoice ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 gap-1"
+                              onClick={() => window.open(invoice.invoice_url, '_blank')}
+                            >
+                              <FileText className="h-3 w-3" />
+                              <span className="hidden sm:inline">Invoice</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-slate-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="purchase" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="purchase">Buy Credits</TabsTrigger>
-          <TabsTrigger value="billing">Billing Dashboard</TabsTrigger>
-          <TabsTrigger value="help">Help & Info</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="purchase" className="space-y-6">
-          {/* Credit Packs */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Available Credit Packs</h2>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Gift className="h-4 w-4" />
-            <span>All purchases are one-time, no subscriptions</span>
-          </div>
-        </div>
-
-        {/* Payment Info */}
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 p-2 bg-blue-100 rounded-full">
-                <Shield className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-medium text-blue-900">Secure Payment Processing</h3>
-                <p className="text-sm text-blue-700">
-                  Payments are processed securely through Hypay. You'll be redirected to their secure payment page to complete your purchase.
-                </p>
-                <p className="text-xs text-blue-600">
-                  After successful payment, your credits will be automatically added to your account.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {creditPacks.map((pack) => (
-            <Card 
-              key={pack.id} 
-              className={`relative transition-all duration-200 hover:shadow-lg ${
-                pack.popular ? 'border-primary shadow-md' : ''
-              }`}
-            >
-              {pack.popular && (
-                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground">
-                    <Star className="h-3 w-3 mr-1" />
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-
-              {bestValue?.id === pack.id && (
-                <div className="absolute -top-2 right-4">
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    Best Value
-                  </Badge>
-                </div>
-              )}
-
-              <CardHeader className="text-center">
-                <div className={`mx-auto h-12 w-12 rounded-full bg-gradient-to-r ${getPackColor(pack)} flex items-center justify-center text-white mb-2`}>
-                  {getPackIcon(pack)}
-                </div>
-                <CardTitle className="text-lg">{pack.name}</CardTitle>
-                <div className="text-3xl font-bold">₪{pack.price_nis}</div>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {pack.credits_amount}
-                    {pack.bonus && (
-                      <span className="text-sm text-blue-600 ml-1">
-                        +{pack.bonus} bonus
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Credits</div>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Per credit:</span>
-                    <span className="font-medium">₪{calculateValuePerCredit(pack)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Videos:</span>
-                    <span className="font-medium">{pack.credits_amount}</span>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={() => handlePurchase(pack)}
-                  disabled={purchasing === pack.id || !isProfileComplete()}
-                  className="w-full"
-                  variant={pack.popular ? "default" : "outline"}
-                >
-                  {purchasing === pack.id ? (
-                    <>
-                      <Clock className="h-4 w-4 mr-2 animate-spin" />
-                      Redirecting...
-                    </>
-                  ) : !isProfileComplete() ? (
-                    <>
-                      <Info className="h-4 w-4 mr-2" />
-                      Complete Profile First
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Buy Now
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Transaction History */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Transaction History
-          </CardTitle>
-          <CardDescription>
-            Recent credit purchases and usage
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {transactions.map((transaction) => (
-              <div key={transaction.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <div className="flex-shrink-0">
-                  {getTransactionIcon(transaction.amount_changed)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium">{getTransactionDisplayName(transaction)}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
-                  </p>
-                </div>
-                                  <div className={`font-semibold ${
-                    transaction.amount_changed > 0 ? "text-blue-600" : "text-red-600"
-                  }`}>
-                  {transaction.amount_changed > 0 ? "+" : ""}{transaction.amount_changed}
-                </div>
-              </div>
-            ))}
-            {transactions.length === 0 && (
-              <div className="text-center py-8">
-                <Activity className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">No transactions yet</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Help Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Info className="h-5 w-5" />
-            How Credits Work
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="space-y-3">
-              <h4 className="font-medium">Credit Usage</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-blue-500" />
-                  1 credit = 1 video upload
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-blue-500" />
-                  Includes AI transcription
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-blue-500" />
-                  Unlimited editing
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-blue-500" />
-                  Caption burning included
-                </li>
-              </ul>
+      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-white shadow-sm">
+                <Sparkles className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">Need more credits?</h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  Purchase credits in bulk for better value. Each credit allows you to process one video.
+                </p>
+              </div>
             </div>
-            
-            <div className="space-y-3">
-              <h4 className="font-medium">Purchase Benefits</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-blue-500" />
-                  No subscription required
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-blue-500" />
-                  Credits never expire
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-blue-500" />
-                  Instant activation
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-blue-500" />
-                  Volume discounts available
-                </li>
-              </ul>
-            </div>
+            <Button variant="outline" className="hidden sm:flex items-center gap-2">
+              View Plans
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
-        </TabsContent>
-
-        <TabsContent value="billing">
-          <BillingDashboard />
-        </TabsContent>
-
-        <TabsContent value="help" className="space-y-6">
-          {/* Help Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Info className="h-5 w-5" />
-                How Credits Work
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div className="space-y-3">
-                  <h4 className="font-medium">Credit Usage</h4>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500" />
-                      1 credit = 1 video upload
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500" />
-                      Includes AI transcription
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500" />
-                      Unlimited editing
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500" />
-                      Caption burning included
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="space-y-3">
-                  <h4 className="font-medium">Purchase Benefits</h4>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500" />
-                      No subscription required
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500" />
-                      Credits never expire
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500" />
-                      Instant activation
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500" />
-                      Volume discounts available
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   )
-} 
+}

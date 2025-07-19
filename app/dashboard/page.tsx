@@ -1,12 +1,12 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useVideoSubscription } from "@/hooks/use-video-subscription"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
+import { StatusBadge, StatusIcon } from "@/components/shared/StatusBadge"
 import { 
   Video, 
   Clock, 
@@ -46,34 +46,12 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5)
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "complete": return "bg-blue-100 text-blue-800"
-      case "ready": return "bg-sky-100 text-sky-800"
-      case "processing": return "bg-indigo-100 text-indigo-800"
-      case "uploading": return "bg-slate-100 text-slate-800"
-      case "burning_in": return "bg-blue-200 text-blue-900"
-      case "failed": return "bg-red-100 text-red-800"
-      default: return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "complete": return <CheckCircle className="h-4 w-4" />
-      case "ready": return <PlayCircle className="h-4 w-4" />
-      case "processing": return <Clock className="h-4 w-4" />
-      case "uploading": return <Activity className="h-4 w-4" />
-      case "burning_in": return <Zap className="h-4 w-4" />
-      case "failed": return <AlertCircle className="h-4 w-4" />
-      default: return <Video className="h-4 w-4" />
-    }
-  }
+  // Status helpers are now imported from shared utilities
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 p-4 md:p-6">
-        <div className="max-w-[1600px] mx-auto space-y-6 md:space-y-8 animate-pulse">
+      <div className="min-h-screen p-4 lg:p-8">
+        <div className="space-y-6 md:space-y-8 animate-pulse">
           {/* Welcome Header Skeleton */}
           <div className="space-y-3">
             <div className="h-10 bg-gradient-to-r from-slate-200 to-slate-300 rounded-lg w-64 shimmer"></div>
@@ -176,8 +154,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 p-4 md:p-6">
-      <div className="max-w-[1600px] mx-auto space-y-6 md:space-y-8">
+    <div className="min-h-screen p-4 lg:p-8">
+      <div className="space-y-6 md:space-y-8">
         {/* Welcome Header */}
         <div className="space-y-3">
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
@@ -366,7 +344,7 @@ export default function DashboardPage() {
                     <div key={video.id} className={`activity-item ${index % 2 === 0 ? 'shimmer' : ''}`}>
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 p-2 rounded-lg bg-slate-100">
-                          {getStatusIcon(video.status)}
+                          <StatusIcon status={video.status} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-slate-800 truncate">{video.title}</p>
@@ -375,9 +353,10 @@ export default function DashboardPage() {
                             {formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}
                           </p>
                         </div>
-                        <Badge className={`text-xs font-medium px-3 py-1 ${getStatusColor(video.status)} border-0 shadow-sm`}>
-                          {video.status}
-                        </Badge>
+                        <StatusBadge 
+                          status={video.status} 
+                          className="text-xs font-medium px-3 py-1"
+                        />
                       </div>
                     </div>
                   ))}

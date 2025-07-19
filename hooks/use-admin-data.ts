@@ -7,11 +7,16 @@ interface Profile {
   id: string
   email: string
   credits: number
-  // Fallback data since auth.users might not be accessible
   created_at: string
   updated_at: string
   full_name: string
   avatar_url?: string
+  first_name: string | null
+  last_name: string | null
+  role: string | null
+  is_banned: boolean
+  banned_at: string | null
+  banned_reason: string | null
 }
 
 interface VideoWithUser {
@@ -52,28 +57,36 @@ export function useAdminData() {
       setLoading(true)
       setError(null)
 
-      // Fetch user profiles (only available columns)
+      // Fetch user profiles with all columns
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           id,
           email,
-          credits
+          credits,
+          first_name,
+          last_name,
+          role,
+          is_banned,
+          banned_at,
+          banned_reason,
+          created_at,
+          updated_at
         `)
-        .order('credits', { ascending: false })
-        .limit(50)
+        .order('created_at', { ascending: false })
+        .limit(100)
 
       if (profilesError) {
         console.error('Profiles error:', profilesError)
         throw new Error(`Failed to fetch profiles: ${profilesError.message}`)
       }
 
-      // Enrich profiles with fallback data
-      const enrichedProfiles: Profile[] = profilesData?.map(profile => ({
+      // Map profiles data to include full_name
+      const enrichedProfiles = profilesData?.map(profile => ({
         ...profile,
-        full_name: profile.email?.split('@')[0] || 'User',
-        created_at: new Date().toISOString(), // Fallback
-        updated_at: new Date().toISOString(), // Fallback
+        full_name: profile.first_name && profile.last_name 
+          ? `${profile.first_name} ${profile.last_name}` 
+          : profile.email?.split('@')[0] || 'User',
         avatar_url: undefined
       })) || []
 

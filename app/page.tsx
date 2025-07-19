@@ -1,31 +1,14 @@
-"use client"
-
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/components/providers/auth-provider"
+import { createClient } from "@/utils/supabase/server"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Play, Zap, Edit, Download, Sparkles, Shield, Globe, Users } from "lucide-react"
 import { generateStructuredData } from "./structured-data"
+import { AuthButtons, HeroAuthButtons, CTAAuthButtons } from "@/components/shared/AuthButtons"
 
-export default function HomePage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-
-  // Remove automatic redirect - let users see the landing page even if authenticated
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-lg">K</span>
-          </div>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        </div>
-      </div>
-    )
-  }
+export default async function HomePage() {
+  // Get user on server side
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
@@ -41,30 +24,7 @@ export default function HomePage() {
               <span className="font-bold text-xl text-slate-800 tracking-tight">Kalil</span>
             </Link>
 
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              {user ? (
-                // Show dashboard link for authenticated users
-                <Link href="/dashboard">
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
-                    Go to Dashboard
-                  </Button>
-                </Link>
-              ) : (
-                // Show auth buttons for unauthenticated users
-                <>
-                  <Link href="/auth/login">
-                    <Button variant="ghost" className="text-slate-600 hover:text-slate-800 hover:bg-slate-100">
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/auth/signup">
-                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
-                      Get Started
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
+            <AuthButtons user={user} />
           </div>
         </div>
       </header>
@@ -90,25 +50,7 @@ export default function HomePage() {
             Perfect for content creators, educators, and businesses who want to make their videos more accessible and engaging.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            {user ? (
-              <Link href="/dashboard">
-                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg text-lg px-8 py-6">
-                  Go to Dashboard
-                </Button>
-              </Link>
-            ) : (
-              <Link href="/auth/signup">
-                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg text-lg px-8 py-6">
-                  Start Free Trial
-                </Button>
-              </Link>
-            )}
-            <Button size="lg" variant="outline" className="w-full sm:w-auto bg-white/80 border-slate-300 hover:bg-white hover:border-slate-400 text-lg px-8 py-6">
-              <Play className="h-5 w-5 mr-2" />
-              Watch Demo
-            </Button>
-          </div>
+          <HeroAuthButtons user={user} />
 
           {/* Trust indicators */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-slate-600">
@@ -181,24 +123,7 @@ export default function HomePage() {
               Join thousands of creators who trust Kalil for their video transcription and captioning needs. Start your free trial today!
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {user ? (
-                <Link href="/dashboard">
-                  <Button size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 shadow-lg text-lg px-8 py-6">
-                    Go to Dashboard
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/auth/signup">
-                  <Button size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 shadow-lg text-lg px-8 py-6">
-                    Start Free Trial
-                  </Button>
-                </Link>
-              )}
-              <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6">
-                Talk to Sales
-              </Button>
-            </div>
+            <CTAAuthButtons user={user} />
           </div>
         </div>
       </section>

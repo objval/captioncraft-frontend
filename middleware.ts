@@ -1,5 +1,6 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
+import { createServerClient } from '@supabase/ssr'
 
 // Global flag to ensure we only log once
 declare global {
@@ -43,7 +44,50 @@ Terminal: ${process.env.HYPAY_MASOF || 'Not Set'}
     return
   }
 
-  return await updateSession(request)
+  // Update session first
+  const response = await updateSession(request)
+
+  // Check for banned users and admin access
+  if (request.nextUrl.pathname.startsWith('/dashboard')) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => 
+              response.cookies.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
+    
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_banned, role')
+        .eq('id', user.id)
+        .single()
+
+      // If user is banned, redirect to banned page
+      if (profile?.is_banned) {
+        return NextResponse.redirect(new URL('/banned', request.url))
+      }
+
+      // Check admin access
+      if (request.nextUrl.pathname.startsWith('/dashboard/admin') && profile?.role !== 'admin') {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
+    }
+  }
+
+  return response
 }
 
 export const config = {
