@@ -13,9 +13,6 @@ import { IdempotencyService, withIdempotency } from '@/lib/payments/idempotency'
 // Get Hypay configuration (automatically switches between test/production)
 const HYPAY_CONFIG = getHypayConfig()
 
-// Log environment status on module load
-logTestEnvironmentStatus()
-
 interface HypayClientData {
   clientName: string
   clientLName: string
@@ -159,7 +156,7 @@ async function generateSecureHypayUrl(
 
     return `${HYPAY_CONFIG.baseUrl}?${finalParams.toString()}`
   } catch (error) {
-    console.error('Failed to generate secure payment URL:', error)
+    paymentLogger.log('error', 'payment_url_generation_failed', { error })
     throw new Error(`Payment URL generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 } 
@@ -189,7 +186,7 @@ async function createPaymentRecord(
   // Add test mode flag if in test environment (graceful fallback if column doesn't exist)
   if (HYPAY_CONFIG.testMode) {
     paymentData.test_mode = true
-    console.log('Creating test mode payment record')
+    // Creating test mode payment record
   }
   
   const { data, error } = await supabase
@@ -201,7 +198,7 @@ async function createPaymentRecord(
   if (error) {
     // If test_mode column doesn't exist, try without it
     if (error.message?.includes('test_mode') && HYPAY_CONFIG.testMode) {
-      console.log('test_mode column not found, retrying without it...')
+      // test_mode column not found, retrying without it...
       delete paymentData.test_mode
       
       const { data: retryData, error: retryError } = await supabase
@@ -211,22 +208,21 @@ async function createPaymentRecord(
         .single()
         
       if (retryError) {
-        console.error('Error creating payment record (retry):', retryError)
+        paymentLogger.log('error', 'payment_record_creation_failed_retry', { error: retryError })
         throw new Error(`Failed to create payment record: ${retryError.message}`)
       }
       
-      console.log(`✅ Created payment record (without test_mode): ${retryData.id}`)
+      paymentLogger.log('info', 'payment_record_created', { paymentId: retryData.id, testMode: false })
       return retryData.id
     }
     
-    console.error('Error creating payment record:', error)
-    console.error('Payment data:', paymentData)
+    paymentLogger.log('error', 'payment_record_creation_failed', { error, paymentData })
     throw new Error(`Failed to create payment record: ${error.message}`)
   }
 
   // Log test payment creation if in test mode
   if (HYPAY_CONFIG.testMode) {
-    console.log(`✅ Created test payment record: ${data.id}`)
+    paymentLogger.log('info', 'test_payment_record_created', { paymentId: data.id })
   }
 
   return data.id
@@ -310,7 +306,7 @@ export async function initiateHypayPayment(
         }
       })
 
-      console.log('Generated secure Hypay URL:', securePaymentUrl)
+      // Generated secure Hypay URL
 
       return { paymentUrl: securePaymentUrl }
     }
@@ -338,7 +334,7 @@ export async function handlePaymentSuccess(
   }
   // Use service role client to bypass RLS for external callback
   const supabase = createServiceRoleClient()
-  console.log(`[handlePaymentSuccess] Processing paymentId: ${paymentId}`)
+  // Processing payment success
 
   // Check for duplicate transaction ID
   const { data: existingTransaction, error: duplicateError } = await supabase
@@ -377,22 +373,22 @@ export async function handlePaymentSuccess(
       .single()
 
     if (fetchError) {
-      console.error(`[handlePaymentSuccess] Error fetching payment ${paymentId}:`, fetchError)
+      paymentLogger.log('error', 'payment_fetch_failed', { paymentId, error: fetchError })
       throw new Error(`Failed to retrieve payment record for ${paymentId}`)
     }
 
     if (!existingPayment) {
-      console.warn(`[handlePaymentSuccess] Payment record ${paymentId} not found.`)
+      paymentLogger.log('warn', 'payment_not_found', { paymentId })
       throw new Error(`Payment record ${paymentId} not found.`)
     }
 
     if (existingPayment.status === 'succeeded') {
-      console.log(`[handlePaymentSuccess] Payment ${paymentId} already succeeded. Skipping.`)
+      paymentLogger.log('info', 'payment_already_succeeded', { paymentId })
       return { success: true, message: 'Payment already processed.' }
     }
 
     // 2. Update payment status to succeeded
-    console.log(`[handlePaymentSuccess] Updating status for payment ${paymentId} to 'succeeded'.`)
+    // Updating payment status to succeeded
     
     // Check if transaction ID already exists for a different payment
     const { data: existingTransaction, error: transactionCheckError } = await supabase
@@ -403,7 +399,7 @@ export async function handlePaymentSuccess(
       .single()
     
     if (existingTransaction) {
-      console.warn(`[handlePaymentSuccess] Transaction ${hypayTransactionId} already exists for payment ${existingTransaction.id}`)
+      paymentLogger.log('warn', 'duplicate_transaction_id_found', { paymentId, transactionId: hypayTransactionId, existingPaymentId: existingTransaction.id })
       throw new Error(`Transaction ID ${hypayTransactionId} already exists for a different payment`)
     }
     
@@ -420,7 +416,7 @@ export async function handlePaymentSuccess(
       .single()
 
     if (updateError) {
-      console.error(`[handlePaymentSuccess] Error updating payment ${paymentId} status:`, updateError)
+      paymentLogger.log('error', 'payment_status_update_failed', { paymentId, error: updateError })
       
       // Check if the payment still exists after failed update
       const { data: checkPayment, error: checkError } = await supabase
@@ -429,11 +425,7 @@ export async function handlePaymentSuccess(
         .eq('id', paymentId)
         .single()
       
-      console.log(`[handlePaymentSuccess] Payment existence check:`, { 
-        exists: !!checkPayment, 
-        payment: checkPayment, 
-        checkError 
-      })
+      paymentLogger.log('info', 'payment_existence_check', { paymentId, exists: !!checkPayment, checkError })
       
       throw new Error(`Failed to update payment status for ${paymentId}: ${updateError.message}`)
     }
@@ -446,7 +438,7 @@ export async function handlePaymentSuccess(
       .single()
 
     if (creditPackError) {
-      console.error(`[handlePaymentSuccess] Error fetching credit pack for payment ${paymentId}:`, creditPackError)
+      // Error fetching credit pack - already logged by paymentLogger
       paymentLogger.log('error', 'credit_pack_fetch_failed', {
         paymentId,
         errorMessage: creditPackError.message,
@@ -455,14 +447,14 @@ export async function handlePaymentSuccess(
         }
       })
     } else if (creditPack) {
-      console.log(`[handlePaymentSuccess] Adding ${creditPack.credits_amount} credits to user ${updatedPayment.user_id}.`)
+      // Adding credits to user
       const { error: creditsError } = await supabase.rpc('add_credits', {
         p_user_id: updatedPayment.user_id,
         p_amount: creditPack.credits_amount
       })
 
       if (creditsError) {
-        console.error(`[handlePaymentSuccess] Error adding credits for user ${updatedPayment.user_id}:`, creditsError)
+        // Error adding credits - already logged by paymentLogger
         paymentLogger.log('error', 'credits_addition_failed', {
           paymentId,
           userId: updatedPayment.user_id,
@@ -471,25 +463,25 @@ export async function handlePaymentSuccess(
         })
         // Decide if this error should prevent success. For now, we log and continue.
       } else {
-        console.log(`[handlePaymentSuccess] Credits added successfully for user ${updatedPayment.user_id}.`)
+        // Credits added successfully - already logged by paymentLogger
         paymentLogger.logCreditsAdded(updatedPayment.user_id, creditPack.credits_amount, paymentId)
       }
     } else {
-      console.warn(`[handlePaymentSuccess] Credit pack details not found for payment ${paymentId}. Credits not added.`)
+      paymentLogger.log('warn', 'credit_pack_not_found', { paymentId })
     }
 
     // 4. Insert or update invoice record
     let invoiceUrl: string
     try {
       invoiceUrl = await generatePrintHeshUrl(hypayTransactionId)
-      console.log(`[handlePaymentSuccess] Generated invoice URL for transaction ${hypayTransactionId}`)
+      // Generated invoice URL
     } catch (error) {
-      console.error(`[handlePaymentSuccess] Error generating invoice URL for transaction ${hypayTransactionId}:`, error)
+      paymentLogger.log('error', 'invoice_url_generation_failed', { transactionId: hypayTransactionId, error })
       invoiceUrl = '' // Set empty URL if generation fails
     }
     
     if (invoiceNumber) {
-      console.log(`[handlePaymentSuccess] Upserting invoice for payment ${paymentId} with invoice number: ${invoiceNumber}.`)
+      // Upserting invoice record
       const { error: invoiceError } = await supabase
         .from('invoices')
         .upsert({
@@ -504,7 +496,7 @@ export async function handlePaymentSuccess(
         })
 
       if (invoiceError) {
-        console.error(`[handlePaymentSuccess] Error upserting invoice for payment ${paymentId}:`, invoiceError)
+        // Error upserting invoice - already logged by paymentLogger
         paymentLogger.log('error', 'invoice_generation_failed', {
           paymentId,
           transactionId: hypayTransactionId,
@@ -515,25 +507,25 @@ export async function handlePaymentSuccess(
           }
         })
         // Don't throw error - invoice generation failure shouldn't stop the payment process
-        console.warn(`[handlePaymentSuccess] Continuing without invoice for payment ${paymentId}`)
+        // Continuing without invoice
       } else {
-        console.log(`[handlePaymentSuccess] Invoice record saved for payment ${paymentId}.`)
+        // Invoice record saved - already logged by paymentLogger
         paymentLogger.logInvoiceGenerated(paymentId, invoiceNumber, invoiceUrl)
       }
     } else {
-      console.log(`[handlePaymentSuccess] No invoice number provided for payment ${paymentId}. Skipping invoice record creation.`)
+      // No invoice number provided - skipping invoice creation
     }
 
     // 5. Revalidate relevant pages
-    console.log(`[handlePaymentSuccess] Revalidating paths for /dashboard/credits and /dashboard/profile.`)
+    // Revalidating relevant paths
     revalidatePath('/dashboard/credits')
     revalidatePath('/dashboard/profile')
 
-    console.log(`[handlePaymentSuccess] Payment ${paymentId} successfully processed.`)
+    // Payment successfully processed
     return { success: true, message: 'Payment processed successfully.' }
 
   } catch (error) {
-    console.error(`[handlePaymentSuccess] Critical error processing payment ${paymentId}:`, error)
+    paymentLogger.log('error', 'payment_processing_critical_error', { paymentId, error })
     throw error // Re-throw to ensure the calling API route knows about the failure
   }
 }
@@ -547,7 +539,7 @@ export async function handlePaymentFailure(
   providerResponse?: any
 ) {
   const supabase = await createClient()
-  console.log(`[handlePaymentFailure] Processing paymentId: ${paymentId} with reason: ${failureReason}`)
+  // Processing payment failure
 
   // Log payment failure
   const errorCode = providerResponse?.CCode || 'unknown'
@@ -562,26 +554,26 @@ export async function handlePaymentFailure(
       .single()
 
     if (fetchError) {
-      console.error(`[handlePaymentFailure] Error fetching payment ${paymentId}:`, fetchError)
+      paymentLogger.log('error', 'payment_fetch_failed_on_failure', { paymentId, error: fetchError })
       throw new Error(`Failed to retrieve payment record for ${paymentId}`)
     }
 
     if (!existingPayment) {
-      console.warn(`[handlePaymentFailure] Payment record ${paymentId} not found.`)
+      paymentLogger.log('warn', 'payment_not_found_on_failure', { paymentId })
       throw new Error(`Payment record ${paymentId} not found.`)
     }
 
     if (existingPayment.status === 'failed') {
-      console.log(`[handlePaymentFailure] Payment ${paymentId} already marked as failed. Skipping.`)
+      paymentLogger.log('info', 'payment_already_failed', { paymentId })
       return { success: true, message: 'Payment already marked as failed.' }
     }
     if (existingPayment.status === 'succeeded') {
-      console.warn(`[handlePaymentFailure] Attempted to mark succeeded payment ${paymentId} as failed. Skipping.`)
+      paymentLogger.log('warn', 'cannot_fail_succeeded_payment', { paymentId })
       return { success: false, message: 'Cannot mark succeeded payment as failed.' }
     }
 
     // 2. Update payment status to failed
-    console.log(`[handlePaymentFailure] Updating status for payment ${paymentId} to 'failed'.`)
+    // Updating payment status to failed
     const { error: updateError } = await supabase
       .from('payments')
       .update({
@@ -595,19 +587,19 @@ export async function handlePaymentFailure(
       .eq('id', paymentId)
 
     if (updateError) {
-      console.error(`[handlePaymentFailure] Error updating payment ${paymentId} status to failed:`, updateError)
+      paymentLogger.log('error', 'payment_failure_update_failed', { paymentId, error: updateError })
       throw new Error(`Failed to update payment status for ${paymentId}`)
     }
 
     // 3. Revalidate relevant pages
-    console.log(`[handlePaymentFailure] Revalidating path for /dashboard/credits.`)
+    // Revalidating credits page
     revalidatePath('/dashboard/credits')
 
-    console.log(`[handlePaymentFailure] Payment ${paymentId} successfully marked as failed.`)
+    // Payment marked as failed
     return { success: true, message: 'Payment marked as failed.' }
 
   } catch (error) {
-    console.error(`[handlePaymentFailure] Critical error processing payment ${paymentId} failure:`, error)
+    paymentLogger.log('error', 'payment_failure_critical_error', { paymentId, error })
     throw error // Re-throw to ensure the calling API route knows about the failure
   }
 }

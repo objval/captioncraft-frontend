@@ -131,7 +131,7 @@ export async function validateTestEnvironment(): Promise<{
   
   // Test signature generation
   try {
-    const { generatePrintHeshSignature } = await import('./hypay-crypto')
+    const { generatePrintHeshSignature } = await import('./crypto')
     const testSignature = generatePrintHeshSignature(
       config.masof,
       'TEST123',
@@ -271,28 +271,6 @@ export function logTestEnvironmentStatus(): void {
       vercelEnv: process.env.VERCEL_ENV
     }
   })
-  
-  if (config.testMode) {
-    console.log(`
-🧪 HYPAY TEST MODE ACTIVE
-═══════════════════════
-Terminal: ${config.masof}
-PassP: ${config.passP}
-UserId: ${config.userId}
-Test Card: ${HYPAY_TEST_CARDS.success.number}
-Test CVV: ${HYPAY_TEST_CARDS.success.cvv}
-Test Amounts: ${TEST_AMOUNTS.join(', ')} NIS
-
-⚠️  No real charges will be made
-    `)
-  } else {
-    console.log(`
-💳 HYPAY PRODUCTION MODE
-═══════════════════════
-Terminal: ${config.masof}
-⚠️  REAL CHARGES WILL BE MADE
-    `)
-  }
 }
 
 /**
@@ -325,7 +303,7 @@ export async function createTestModePayment(
     .single()
 
   if (error) {
-    console.error('Error creating test payment record:', error)
+    paymentLogger.log('error', 'test_payment_creation_failed', { error })
     throw new Error('Failed to create test payment record')
   }
 

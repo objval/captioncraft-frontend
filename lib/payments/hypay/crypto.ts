@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import { paymentLogger } from './payment-logger'
 
 /**
  * Hypay signature generation and verification utilities
@@ -50,7 +51,7 @@ export function verifyHypaySignature(
     const computedSignature = generatePaymentSignature(params, apiKey)
     return computedSignature === expectedSignature
   } catch (error) {
-    console.error('Error verifying Hypay signature:', error)
+    paymentLogger.log('error', 'signature_verification_error', { error })
     return false
   }
 }
@@ -93,18 +94,18 @@ export async function requestHypaySignature(
     }
 
     const responseText = await response.text()
-    console.log('APISign response:', responseText)
+    // APISign response received
     
     // Check for error codes
     const responseParams = new URLSearchParams(responseText)
     const ccode = responseParams.get('CCode')
     
     if (ccode && ccode !== '0') {
-      console.warn(`APISign returned error code: ${ccode}`)
+      paymentLogger.log('warn', 'apisign_error_code', { ccode })
       
       // If in test mode and APISign is not available, fall back to direct payment
       if (config.testMode && (ccode === '900' || ccode === '901' || ccode === '902')) {
-        console.log('APISign not available in test mode, falling back to direct payment URL')
+        // APISign not available in test mode, falling back to direct payment URL
         
         // Generate a mock signature for testing
         const mockSignature = generatePaymentSignature(params, config.apiKey)
@@ -136,11 +137,11 @@ export async function requestHypaySignature(
 
     return { signedParams, signature }
   } catch (error) {
-    console.error('APISign request failed:', error)
+    paymentLogger.log('error', 'apisign_request_failed', { error })
     
     // If in test mode and APISign fails, fall back to direct payment
     if (config.testMode) {
-      console.log('Falling back to direct payment URL generation for testing')
+      // Falling back to direct payment URL generation for testing
       
       const mockSignature = generatePaymentSignature(params, config.apiKey)
       
@@ -179,7 +180,7 @@ export async function verifyPaymentCallback(
   const verifyUrl = `${config.baseUrl}?${verifyParams.toString()}`
 
   try {
-    console.log('Making verification request to:', verifyUrl)
+    // Making verification request
     const response = await fetch(verifyUrl, {
       method: 'GET',
       headers: {
@@ -195,13 +196,13 @@ export async function verifyPaymentCallback(
     }
 
     const responseText = await response.text()
-    console.log('Verification response:', responseText)
+    // Verification response received
     
     const responseParams = new URLSearchParams(responseText)
     const ccodeRaw = responseParams.get('CCode')
     const ccode = ccodeRaw ? ccodeRaw.trim() : null
 
-    console.log('Parsed CCode:', { ccodeRaw, ccode, isEqual: ccode === '0' })
+    // Parsed CCode from response
 
     // CCode=0 means verification successful
     // CCode=902 means verification failed
@@ -213,7 +214,7 @@ export async function verifyPaymentCallback(
       error: isValid ? undefined : `Verification failed with CCode: ${ccode}`
     }
   } catch (error) {
-    console.error('Payment verification failed:', error)
+    paymentLogger.log('error', 'payment_verification_failed', { error })
     return {
       isValid: false,
       error: `Verification request error: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -235,10 +236,10 @@ export function sanitizeParams(params: Record<string, any>): Record<string, stri
       
       // Basic validation - reject obviously malicious patterns
       if (stringValue.length > 1000) {
-        console.warn(`Parameter ${key} too long, truncating`)
+        paymentLogger.log('warn', 'parameter_truncated', { key, originalLength: value.length })
         sanitized[key] = stringValue.substring(0, 1000)
       } else if (stringValue.includes('<script') || stringValue.includes('javascript:')) {
-        console.warn(`Potentially malicious parameter ${key}, rejecting`)
+        paymentLogger.log('warn', 'malicious_parameter_rejected', { key })
         continue
       } else {
         sanitized[key] = stringValue

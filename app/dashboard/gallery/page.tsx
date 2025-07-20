@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useVideoSubscription } from "@/hooks/use-video-subscription"
+import { useVideoSubscription } from "@/hooks/video"
 import toast from "@/lib/utils/toast"
 
 // Import gallery components

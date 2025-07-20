@@ -33,7 +33,7 @@ import {
   Zap
 } from "lucide-react"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useCreditBalance } from "@/hooks/use-credit-balance"
+import { useCreditBalance } from "@/hooks/credits"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/database/supabase/client"
 

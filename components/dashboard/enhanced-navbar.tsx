@@ -47,8 +47,8 @@ import {
   ChevronDown
 } from "lucide-react"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useCreditBalance } from "@/hooks/use-credit-balance"
-import { useVideoSubscription } from "@/hooks/use-video-subscription"
+import { useCreditBalance } from "@/hooks/credits"
+import { useVideoSubscription } from "@/hooks/video"
 import { formatDistanceToNow } from "date-fns"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import toast from "@/lib/utils/toast"
@@ -74,7 +74,7 @@ export function EnhancedNavbar({
   className 
 }: EnhancedNavbarProps) {
   const { user } = useAuth()
-  const { credits } = useCreditBalance()
+  const { credits } = useCreditBalance(user?.id, { initialCredits: 0 })
   const { videos } = useVideoSubscription(user?.id)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showCommandSearch, setShowCommandSearch] = useState(false)

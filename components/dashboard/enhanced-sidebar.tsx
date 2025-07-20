@@ -49,7 +49,7 @@ import {
   Monitor
 } from "lucide-react"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useCreditBalance } from "@/hooks/use-credit-balance"
+import { useCreditBalance } from "@/hooks/credits"
 import toast from "@/lib/utils/toast"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/database/supabase/client"
@@ -283,7 +283,9 @@ export function EnhancedSidebar({
                   </div>
                   <div>
                     <p className="text-xs font-medium text-white/80">Credit Balance</p>
-                    <p className="text-2xl font-bold">{credits}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-2xl font-bold">{credits}</p>
+                    </div>
                   </div>
                 </div>
                 {isLowCredits && (

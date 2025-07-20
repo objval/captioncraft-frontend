@@ -5,7 +5,7 @@ import { useDropzone } from "react-dropzone"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { useCreditBalance } from "@/hooks/use-credit-balance"
+import { useCreditBalance, useUploadCredits } from "@/hooks/credits"
 import { useAuth } from "@/components/providers/auth-provider"
 import { Upload, X, AlertCircle, Coins, CheckCircle } from "lucide-react"
 import toast from "@/lib/utils/toast"
@@ -23,7 +23,14 @@ export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
   const [uploadComplete, setUploadComplete] = useState(false)
 
   const { user } = useAuth()
-  const { credits, refreshCredits } = useCreditBalance(user?.id)
+  const { credits, refreshCredits } = useCreditBalance(user?.id, { watchTransactions: true })
+  const { startListening, stopListening } = useUploadCredits({
+    userId: user?.id,
+    onCreditUpdate: (newCredits) => {
+      // Credits will be updated via the main hook
+      refreshCredits()
+    }
+  })
 
   const uploadVideo = async (file: File): Promise<any> => {
     const supabase = createClient()
@@ -179,6 +186,9 @@ export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
     console.log("Starting upload - current credits:", credits)
     setUploading(true)
     setUploadProgress(0)
+    
+    // Start listening for credit updates during upload
+    startListening()
 
     try {
       const response = await uploadVideo(selectedFile)
@@ -201,6 +211,8 @@ export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
       handleUploadError(error)
     } finally {
       setUploading(false)
+      // Stop listening when upload is done
+      stopListening()
     }
   }
 

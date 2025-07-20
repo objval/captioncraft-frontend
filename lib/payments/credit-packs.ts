@@ -13,7 +13,7 @@ export async function getCreditPacks(): Promise<CreditPack[]> {
     .order("credits_amount", { ascending: true })
 
   if (error) {
-    console.error("Error fetching credit packs:", error)
+    // Error fetching credit packs
     throw new Error(`Failed to fetch credit packs: ${error.message}`)
   }
 
@@ -36,7 +36,7 @@ export async function getCreditPack(packId: string): Promise<CreditPack> {
     if (error.code === 'PGRST116') {
       throw new Error("Credit pack not found")
     }
-    console.error("Error fetching credit pack:", error)
+    // Error fetching credit pack
     throw new Error(`Failed to fetch credit pack: ${error.message}`)
   }
 
@@ -57,7 +57,7 @@ export function subscribeToCreditPacks(
         const updatedPacks = await getCreditPacks()
         onUpdate(updatedPacks)
       } catch (error) {
-        console.error("Error refetching credit packs:", error)
+        // Error refetching credit packs
       }
     }
   )
@@ -79,7 +79,7 @@ export async function getCreditPackStats(): Promise<{
     .select("credits_amount, price_nis")
 
   if (error) {
-    console.error("Error fetching credit pack stats:", error)
+    // Error fetching credit pack stats
     throw new Error(`Failed to fetch credit pack statistics: ${error.message}`)
   }
 

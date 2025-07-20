@@ -24,7 +24,7 @@ export async function generatePrintHeshUrl(transId: string): Promise<string> {
   const signatureUrl = `${baseUrl}?${signatureRequestParams.toString()}`
   
   try {
-    console.log('Requesting PrintHesh signature from:', signatureUrl)
+    // Requesting PrintHesh signature
     const response = await fetch(signatureUrl, {
       method: 'GET',
       headers: {
@@ -37,7 +37,7 @@ export async function generatePrintHeshUrl(transId: string): Promise<string> {
     }
     
     const responseText = await response.text()
-    console.log('PrintHesh signature response:', responseText)
+    // PrintHesh signature response received
     
     // Step 2: Parse the response to get the signature
     const responseParams = new URLSearchParams(responseText)
@@ -59,7 +59,7 @@ export async function generatePrintHeshUrl(transId: string): Promise<string> {
     return `${baseUrl}?${printHeshParams.toString()}`
     
   } catch (error) {
-    console.error('Error generating PrintHesh URL:', error)
+    // Error generating PrintHesh URL - will be caught by caller
     throw new Error(`Failed to generate PrintHesh URL: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }

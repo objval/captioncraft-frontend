@@ -1,12 +1,12 @@
 "use client"
 
-import { useVideoSubscription } from "@/hooks/use-video-subscription"
-import { useCreditBalance } from "@/hooks/use-credit-balance"
+import { useVideoSubscription } from "@/hooks/video"
+import { useCreditBalance } from "@/hooks/credits"
 import { SuspenseNumber } from "./SuspenseWrappers"
 import { useMemo } from "react"
 
 export function ClientCreditsCount({ userId, initialCredits }: { userId: string, initialCredits: number }) {
-  const { credits } = useCreditBalance(userId, initialCredits)
+  const { credits } = useCreditBalance(userId, { initialCredits })
   return <SuspenseNumber value={credits} className="stats-number" />
 }
 

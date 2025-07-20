@@ -12,7 +12,7 @@ import {
   ClientSuccessRate
 } from "./ClientDataComponents"
 import { useMemo } from "react"
-import { useVideoSubscription } from "@/hooks/use-video-subscription"
+import { useVideoSubscription } from "@/hooks/video"
 
 interface DashboardStatsWithSuspenseProps {
   userId: string

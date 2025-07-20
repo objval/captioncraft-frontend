@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useCreditBalance } from "@/hooks/use-credit-balance"
-import { useVideoSubscription } from "@/hooks/use-video-subscription"
+import { useCreditBalance } from "@/hooks/credits"
+import { useVideoSubscription } from "@/hooks/video"
 import { getUserProfile, updateUserProfile } from "@/lib/services/profiles"
 import { type UserProfile } from "@/lib/api/api"
 import toast from "@/lib/utils/toast"

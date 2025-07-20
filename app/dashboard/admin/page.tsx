@@ -12,9 +12,8 @@ import {
   AlertTriangle,
   RefreshCcw,
 } from "lucide-react"
-import { useAdminData } from "@/hooks/use-admin-data"
+import { useAdminData, useAdmin } from "@/hooks/auth"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useAdmin } from "@/hooks/use-admin"
 import { createClient } from "@/lib/database/supabase/client"
 import toast from "@/lib/utils/toast"
 import { useRouter } from "next/navigation"

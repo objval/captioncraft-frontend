@@ -27,7 +27,9 @@
       "Bash(npm install:*)",
       "Bash(bun run:*)",
       "WebFetch(domain:ui.shadcn.com)",
-      "WebFetch(domain:react.dev)"
+      "WebFetch(domain:react.dev)",
+      "Bash(git checkout:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

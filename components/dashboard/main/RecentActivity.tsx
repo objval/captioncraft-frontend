@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusBadge, StatusIcon } from "@/components/shared/StatusBadge"
+import { DateDisplay } from "@/components/shared/DateDisplayClient"
 import { Activity, Video, Calendar } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
 import type { Video as VideoType } from "@/lib/api/api"
 
 interface RecentActivityProps {
@@ -48,7 +48,7 @@ export function RecentActivity({ videos }: RecentActivityProps) {
                     <p className="text-sm font-semibold text-foreground truncate">{video.title}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                       <Calendar className="h-3 w-3" />
-                      {formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}
+                      <DateDisplay date={video.created_at} format="relative" />
                     </p>
                   </div>
                   <StatusBadge 

@@ -4,10 +4,8 @@ import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams } from "next/navigation"
 import { api, type Video, type TranscriptData, type TranscriptWord, type TranscriptSegment } from "@/lib/api/api"
 import { getUserVideo, updateVideoTranscript } from "@/lib/media/videos"
-import { useDebounce } from "@/hooks/useDebounce"
-import { useVideoSubscription } from "@/hooks/useVideoSubscription"
-import { useTranscriptEditing } from "@/hooks/useTranscriptEditing"
-import { useVideoControls } from "@/hooks/useVideoControls"
+import { useDebounce } from "@/hooks/utils"
+import { useSingleVideoSubscription, useTranscriptEditing, useVideoControls } from "@/hooks/video"
 import type { SaveStatus, EditMode } from "@/lib/utils/types"
 import { KeyboardShortcuts } from "@/components/dashboard/editor/KeyboardShortcuts"
 import { VideoPlayer } from "@/components/dashboard/editor/VideoPlayer"
@@ -116,7 +114,7 @@ export default function EditorPage() {
     }
   }, [])
 
-  useVideoSubscription(videoId, handleVideoUpdate, handleStatusChange)
+  useSingleVideoSubscription(videoId, handleVideoUpdate, handleStatusChange)
 
   // Transcript editing handlers
   const { handleSegmentEdit, handleWordEdit } = useTranscriptEditing({

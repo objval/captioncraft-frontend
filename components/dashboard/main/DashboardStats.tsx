@@ -1,16 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Video, Clock, TrendingUp, Coins } from "lucide-react"
+import { Video, Clock, TrendingUp } from "lucide-react"
 import { useMemo } from "react"
 import type { Video as VideoType } from "@/lib/api/api"
 
 interface DashboardStatsProps {
   videos: VideoType[]
-  credits: number
   loading?: boolean
 }
 
-export function DashboardStats({ videos, credits, loading }: DashboardStatsProps) {
+export function DashboardStats({ videos, loading }: DashboardStatsProps) {
   // Memoize statistics calculations
   const stats = useMemo(() => {
     const totalVideos = videos.length
@@ -49,8 +48,8 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="dashboard-card">
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
@@ -67,7 +66,7 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
       <Card className="stats-card group">
         <CardHeader className="stats-card-content flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="text-sm font-semibold text-foreground">Total Videos</CardTitle>
@@ -112,21 +111,6 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
             <Progress value={stats.successRate} className="h-2 bg-slate-100" />
             <p className="text-xs text-slate-500">Overall performance</p>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="stats-card group pulse-glow">
-        <CardHeader className="stats-card-content flex flex-row items-center justify-between space-y-0 pb-3">
-          <CardTitle className="text-sm font-semibold text-foreground">Credits</CardTitle>
-          <div className="p-2 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
-            <Coins className="h-5 w-5 text-purple-600" />
-          </div>
-        </CardHeader>
-        <CardContent className="stats-card-content">
-          <div className="stats-number">{credits}</div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Available credits
-          </p>
         </CardContent>
       </Card>
     </div>

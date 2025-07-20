@@ -1,8 +1,7 @@
 "use client"
 
 import { useAuth } from "@/components/providers/auth-provider"
-import { useVideoSubscription } from "@/hooks/use-video-subscription"
-import { useCreditBalance } from "@/hooks/use-credit-balance"
+import { useVideoSubscription } from "@/hooks/video"
 
 // Import dashboard components
 import { DashboardStats } from "@/components/dashboard/main/DashboardStats"
@@ -22,7 +21,6 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const { user } = useAuth()
   const { videos, loading } = useVideoSubscription(user?.id, initialVideos)
-  const { credits } = useCreditBalance(user?.id, initialCredits)
 
   if (loading) {
     return <DashboardSkeleton />
@@ -42,7 +40,7 @@ export default function DashboardClient({
         </div>
 
         {/* Stats Cards */}
-        <DashboardStats videos={videos} credits={credits} />
+        <DashboardStats videos={videos} />
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">

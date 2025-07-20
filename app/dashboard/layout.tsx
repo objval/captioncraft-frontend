@@ -6,8 +6,8 @@ import { EnhancedSidebar } from "@/components/dashboard/enhanced-sidebar"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { FloatingActionButton } from "@/components/ui/floating-action-button"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useVideoSubscription } from "@/hooks/use-video-subscription"
-import { useAdmin } from "@/hooks/use-admin"
+import { useVideoSubscription } from "@/hooks/video"
+import { useAdmin } from "@/hooks/auth"
 import { ModalSkeleton } from "@/components/shared/LoadingSkeleton"
 import { cn } from "@/lib/utils/general"
 
@@ -98,4 +98,4 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </Suspense>
     </div>
   )
-} 
+}

@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useCreditBalance } from "@/hooks/use-credit-balance"
-import { useTransactions } from "@/hooks/use-transactions"
+import { useCreditBalance, useTransactions } from "@/hooks/credits"
 import { getCreditPacks } from "@/lib/payments/credit-packs"
 import { getUserPayments } from "@/lib/services/payments"
 import type { CreditPack, Payment } from "@/lib/api/api"
