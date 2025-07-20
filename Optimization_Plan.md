@@ -12,35 +12,32 @@ This document outlines a comprehensive optimization strategy for the CaptionCraf
 - **Reusable Skeletons**: Created 10+ skeleton components for consistent loading UI
 - **Server Components**: Converted landing page from client to server component
 
-### 🔄 In Progress (Phase 2 - 70%)
+### ✅ Completed (Phase 2 - 100%)
 - Created shared component library structure
-- **✅ Refactored Credits Page**: Completely redesigned from 568 lines to clean, unified billing dashboard
-  - Removed complex BillingDashboard component and tabs
-  - Created single-page overview with better UX
-  - Fixed credit balance warning logic
-  - Enhanced loading states with inline skeleton loaders
-  - Human-readable transaction formatting with contextual icons
-- **✅ Redesigned Profile Page**: Transformed from cluttered 566 lines to focused profile experience
-  - Removed redundant payment history and transaction sections
-  - Added profile completion progress indicator
-  - Implemented achievements and gamification
-  - Added account settings and preferences sections
-  - Enhanced UI with gradient headers and modern design
-  - Created comprehensive loading skeleton
-- **✅ Enhanced Admin System**: Complete role-based admin dashboard
-  - Implemented role-based access control (RBAC)
-  - Admin-only sidebar navigation
-  - User management with search and filtering
-  - Credit management (add/remove credits)
-  - User banning system with reasons
-  - Admin role assignment
-  - Middleware protection for banned users
-  - Enhanced UI with detailed user views
-  - Created banned user page with appeal instructions
-- Need to break down large components (Editor: 1072 lines remaining)
+- **✅ Refactored Editor Page**: Reduced from 1072 lines to 394 lines
+  - Extracted VideoPlayer components (controls, volume, progress)
+  - Created EditorHeader component with save status
+  - Built TranscriptEditor with proper layout and overflow handling
+  - Extracted utility functions and custom hooks
+  - Created useVideoControls, useVideoSubscription, useTranscriptEditing hooks
+  - Fixed real-time video updates and transcript saving
+- **✅ Refactored Admin Page**: Reduced from 883 lines to 419 lines
+  - Extracted SystemStats, UserManagement, RecentVideos components
+  - Created SystemActivity, UserDialogs, AdminFilters components
+  - Maintained all functionality with better organization
+- **✅ Refactored Profile Page**: Reduced from 696 lines to 476 lines
+  - Extracted ProfileCard, ProfileForm, ActivityStats components
+  - Created AccountSettings and SecuritySettings components
+  - Improved code organization and maintainability
+
+### 🔄 In Progress (Phase 2.5 - 60%)
+- Need to refactor remaining dashboard pages:
+  - ✅ Credits page (614 lines → 143 lines) - Extracted all components
+  - Main Dashboard (434 lines) - Extract stats and activity components
+  - Gallery page (354 lines) - Extract filters and grid components
 
 ### 📌 Remaining Work
-- **Phase 2**: Component refactoring (30% remaining - Editor page breakdown)
+- **Phase 2.5**: Dashboard pages refactoring (2 pages remaining)
 - **Phase 3**: Performance optimizations (bundle, images, prefetching)
 - **Phase 4**: Polish (monitoring, error boundaries, TypeScript strict mode)
 
@@ -485,40 +482,43 @@ export default function GlobalError({
 - [x] Implement proper loading states (completed)
 - [x] Implement role-based access control (completed)
 
-### Phase 2.5: Dashboard Pages Component Refactoring - NEW
-- [ ] Main Dashboard page (435 lines):
+### Phase 2.5: Dashboard Pages Component Refactoring - IN PROGRESS
+- [ ] Main Dashboard page (434 lines):
   - [ ] Extract DashboardStats component
   - [ ] Extract VideoStatusOverview component
   - [ ] Extract RecentActivity component
   - [ ] Extract QuickActions component
-  - [ ] Create DashboardSkeleton component
-- [ ] Credits page (615 lines):
-  - [ ] Extract CreditOverview component
-  - [ ] Extract CreditPacksGrid component
-  - [ ] Extract TransactionHistory component
-  - [ ] Extract PaymentHistory component
-  - [ ] Extract InvoiceTable component
-  - [ ] Extract CreditStats component
-- [ ] Gallery page (355 lines):
+- [x] Credits page (614 lines → 143 lines):
+  - [x] Extract CreditOverview component
+    - [x] Changed from percentage-based to activity-based stats
+    - [x] Shows actual video uploads and burn-in jobs per month
+    - [x] Shows total credits purchased vs utilized
+    - [x] Accurate all-time activity breakdown
+  - [x] Extract CreditPacksGrid component
+  - [x] Extract TransactionHistory component
+    - [x] Fixed to show "Video Upload" for -1 credit
+    - [x] Fixed to show "Caption Burn-in" for -5 credits
+  - [x] Extract PaymentHistory component
+  - [x] Extract InvoiceTable component
+  - [x] Extract HelpSection component
+- [ ] Gallery page (354 lines):
   - [ ] Extract GalleryHeader component
   - [ ] Extract GalleryFilters component
   - [ ] Extract VideoGrid component
   - [ ] Extract SelectionControls component
-  - [ ] Create GallerySkeleton component
-- [ ] Profile page (696 lines):
-  - [ ] Extract ProfileCard component
-  - [ ] Extract ProfileForm component
-  - [ ] Extract ActivityStats component
-  - [ ] Extract AccountSettings component
-  - [ ] Extract SecuritySettings component
-  - [ ] Extract AchievementsList component
-- [ ] Admin page (883 lines):
-  - [ ] Extract SystemStats component
-  - [ ] Extract UserManagement component
-  - [ ] Extract RecentVideos component
-  - [ ] Extract SystemActivity component
-  - [ ] Extract UserDialogs component
-  - [ ] Extract AdminFilters component
+- [x] Profile page (696 lines → 476 lines):
+  - [x] Extract ProfileCard component
+  - [x] Extract ProfileForm component
+  - [x] Extract ActivityStats component
+  - [x] Extract AccountSettings component
+  - [x] Extract SecuritySettings component
+- [x] Admin page (883 lines → 419 lines):
+  - [x] Extract SystemStats component
+  - [x] Extract UserManagement component
+  - [x] Extract RecentVideos component
+  - [x] Extract SystemActivity component
+  - [x] Extract UserDialogs component
+  - [x] Extract AdminFilters component
 
 ### Phase 3: Performance (Week 5-6) - PENDING
 - [ ] Optimize bundle with modular imports

@@ -1,4 +1,8 @@
-export function formatTransactionReason(reason: string | null): string {
+export function formatTransactionReason(reason: string | null, amountChanged?: number): string {
+  // Check amount-based reasons first
+  if (amountChanged === -1) return 'Video Upload'
+  if (amountChanged === -5) return 'Caption Burn-in'
+  
   if (!reason) return 'Video Processing'
   
   // Map of transaction reasons to user-friendly text
@@ -7,7 +11,8 @@ export function formatTransactionReason(reason: string | null): string {
     'welcome_bonus': 'Welcome Bonus',
     'video_processing': 'Video Processing',
     'video_upload': 'Video Upload',
-    'caption_burning': 'Caption Burning',
+    'caption_burning': 'Caption Burn-in',
+    'burn_in': 'Caption Burn-in',
     'transcription': 'Transcription',
     'refund': 'Refund',
     'bonus': 'Bonus Credits',
