@@ -10,7 +10,8 @@
       "mcp__supabase__execute_sql",
       "Bash(npm ls:*)",
       "mcp__supabase__apply_migration",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "mcp__supabase__search_docs"
     ],
     "deny": []
   }
