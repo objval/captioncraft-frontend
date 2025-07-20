@@ -140,7 +140,7 @@ export async function updateVideoTranscript(
   const { error: transcriptError } = await supabase
     .from("transcripts")
     .update({ 
-      edited_transcript_data: transcriptData,
+      transcript_data: transcriptData,
       updated_at: new Date().toISOString()
     })
     .eq("video_id", videoId)

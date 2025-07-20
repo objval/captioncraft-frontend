@@ -289,6 +289,7 @@ export default function AdminPage() {
             </Card>
           ))}
         </div>
+        </div>
       </div>
     )
   }
@@ -306,10 +307,11 @@ export default function AdminPage() {
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-        <Button onClick={refetch} variant="outline">
-          <RefreshCcw className="h-4 w-4 mr-2" />
-          Retry Loading
-        </Button>
+          <Button onClick={refetch} variant="outline">
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Retry Loading
+          </Button>
+        </div>
       </div>
     )
   }
