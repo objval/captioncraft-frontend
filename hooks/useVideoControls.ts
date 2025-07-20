@@ -1,6 +1,6 @@
 import { useState, useCallback, RefObject } from 'react'
 
-export function useVideoControls(videoRef: RefObject<HTMLVideoElement>) {
+export function useVideoControls(videoRef: RefObject<HTMLVideoElement | null>) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -56,7 +56,9 @@ export function useVideoControls(videoRef: RefObject<HTMLVideoElement>) {
     duration,
     setDuration,
     volume,
+    setVolume,
     isMuted,
+    setIsMuted,
     
     // Controls
     seekTo,

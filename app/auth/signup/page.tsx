@@ -26,7 +26,7 @@ import {
   ArrowLeft,
   ArrowRight
 } from "lucide-react"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 
 interface FormData {
   // Step 1: Authentication

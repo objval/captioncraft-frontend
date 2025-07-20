@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
 import { useAuth } from "@/components/providers/auth-provider"
 import { Upload, X, AlertCircle, Coins, CheckCircle } from "lucide-react"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 import { createClient } from "@/lib/database/supabase/client"
 
 interface UploadModalProps {
@@ -23,7 +23,7 @@ export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
   const [uploadComplete, setUploadComplete] = useState(false)
 
   const { user } = useAuth()
-  const { credits } = useCreditBalance(user?.id)
+  const { credits, refreshCredits } = useCreditBalance(user?.id)
 
   const uploadVideo = async (file: File): Promise<any> => {
     const supabase = createClient()
@@ -176,6 +176,7 @@ export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
       return
     }
 
+    console.log("Starting upload - current credits:", credits)
     setUploading(true)
     setUploadProgress(0)
 
@@ -186,6 +187,10 @@ export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
 
       toast.success(`Video uploaded successfully! Video ID: ${response.videoId || response.id}`)
       console.log("Upload response:", response)
+      console.log("Upload complete - waiting for real-time credit update")
+
+      // Credits will be updated via real-time subscription
+      // No need to manually refresh
 
       // Auto-close after 2 seconds
       setTimeout(() => {

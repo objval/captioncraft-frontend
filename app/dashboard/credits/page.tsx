@@ -7,7 +7,7 @@ import { useTransactions } from "@/hooks/use-transactions"
 import { getCreditPacks } from "@/lib/payments/credit-packs"
 import { getUserPayments } from "@/lib/services/payments"
 import type { CreditPack, Payment } from "@/lib/api/api"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 import { initiateHypayPayment } from "@/app/actions/payments"
 
 // Import credit components
@@ -92,10 +92,10 @@ export default function CreditsPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Billing & Credits
         </h1>
-        <p className="text-slate-600 mt-1">
+        <p className="text-muted-foreground mt-1">
           Manage your credits and view your billing history
         </p>
       </div>

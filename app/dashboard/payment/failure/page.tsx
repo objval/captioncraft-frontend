@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { XCircle, AlertCircle, Loader2, ArrowLeft } from "lucide-react"
 import { useAuth } from "@/components/providers/auth-provider"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 
 export default function PaymentFailurePage() {
   const searchParams = useSearchParams()

@@ -19,10 +19,10 @@ export function InvoiceTable({ payments }: InvoiceTableProps) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Receipt className="h-5 w-5 text-slate-600" />
+            <Receipt className="h-5 w-5 text-muted-foreground" />
             Complete Purchase History
           </span>
-          <span className="text-sm font-normal text-slate-600">
+          <span className="text-sm font-normal text-muted-foreground">
             {successfulPayments.length} successful purchases
           </span>
         </CardTitle>
@@ -32,13 +32,13 @@ export function InvoiceTable({ payments }: InvoiceTableProps) {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-3 px-4 font-medium text-sm text-slate-700">Date</th>
-                <th className="text-left py-3 px-4 font-medium text-sm text-slate-700">Package</th>
-                <th className="text-right py-3 px-4 font-medium text-sm text-slate-700">Credits</th>
-                <th className="text-right py-3 px-4 font-medium text-sm text-slate-700">Amount</th>
-                <th className="text-center py-3 px-4 font-medium text-sm text-slate-700">Status</th>
-                <th className="text-center py-3 px-4 font-medium text-sm text-slate-700">Invoice</th>
+              <tr className="border-b border-border">
+                <th className="text-left py-3 px-4 font-medium text-sm text-foreground">Date</th>
+                <th className="text-left py-3 px-4 font-medium text-sm text-foreground">Package</th>
+                <th className="text-right py-3 px-4 font-medium text-sm text-foreground">Credits</th>
+                <th className="text-right py-3 px-4 font-medium text-sm text-foreground">Amount</th>
+                <th className="text-center py-3 px-4 font-medium text-sm text-foreground">Status</th>
+                <th className="text-center py-3 px-4 font-medium text-sm text-foreground">Invoice</th>
               </tr>
             </thead>
             <tbody>
@@ -47,9 +47,9 @@ export function InvoiceTable({ payments }: InvoiceTableProps) {
                 const hasInvoice = invoice?.invoice_url && payment.status === 'succeeded'
                 
                 return (
-                  <tr key={payment.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <tr key={payment.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                     <td className="py-3 px-4">
-                      <DateDisplay date={payment.created_at} format="smart" className="text-sm text-slate-600" />
+                      <DateDisplay date={payment.created_at} format="smart" className="text-sm text-muted-foreground" />
                     </td>
                     <td className="py-3 px-4">
                       <p className="font-medium text-sm">{payment.credit_pack?.name || 'Credit Purchase'}</p>
@@ -76,7 +76,7 @@ export function InvoiceTable({ payments }: InvoiceTableProps) {
                           <ExternalLink className="h-3 w-3" />
                         </Button>
                       ) : (
-                        <span className="text-xs text-slate-400">-</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </td>
                   </tr>

@@ -33,7 +33,7 @@ import {
   BarChart3
 } from "lucide-react"
 import { format, startOfMonth, endOfMonth, subDays } from "date-fns"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 
 interface BillingOverview {
   currentBalance: number

@@ -23,7 +23,7 @@ import {
 } from "lucide-react"
 import { formatDistanceToNow, format } from "date-fns"
 import type { Payment } from "@/lib/api/api"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 
 interface PaymentFilters {
   status: string

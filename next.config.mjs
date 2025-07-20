@@ -54,44 +54,32 @@ const nextConfig = {
       'react-hot-toast',
     ],
   },
-  // Webpack optimization
+  // Simplified webpack configuration without conflicting optimizations
   webpack: (config, { isServer }) => {
-    // Tree shaking optimization
-    config.optimization.usedExports = true
-    config.optimization.sideEffects = false
-    
-    // Split chunks optimization
+    // Only apply split chunks optimization for client-side
     if (!isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          default: false,
-          vendors: false,
-          // Vendor chunk for node_modules
-          vendor: {
-            name: 'vendor',
-            chunks: 'all',
-            test: /node_modules/,
-            priority: 20,
-          },
-          // Common chunk for shared components
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: 10,
-            reuseExistingChunk: true,
-            enforce: true,
-          },
-          // Separate chunk for UI components
-          ui: {
-            name: 'ui',
-            test: /components\/(ui|shared)/,
-            chunks: 'all',
-            priority: 30,
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: {
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              priority: -10,
+              reuseExistingChunk: true,
+              name(module, chunks, cacheGroupKey) {
+                const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)?.[1];
+                return `vendor-${packageName?.replace('@', '')}`;
+              },
+            },
           },
         },
-      }
+      };
     }
     
     return config

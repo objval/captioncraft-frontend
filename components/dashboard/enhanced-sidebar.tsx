@@ -14,6 +14,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils/general"
 import Link from "next/link"
@@ -38,13 +43,17 @@ import {
   MessageSquare,
   Bell,
   ChevronLeft,
-  Menu
+  Menu,
+  Moon,
+  Sun,
+  Monitor
 } from "lucide-react"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/database/supabase/client"
+import { useTheme } from "next-themes"
 
 interface EnhancedSidebarProps {
   isAdmin: boolean
@@ -77,6 +86,7 @@ export function EnhancedSidebar({
   const router = useRouter()
   const { user } = useAuth()
   const { credits, loading: creditsLoading } = useCreditBalance(user?.id)
+  const { theme, setTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState("")
   const [showCommandPalette, setShowCommandPalette] = useState(false)
 
@@ -174,7 +184,7 @@ export function EnhancedSidebar({
 
   if (collapsed) {
     return (
-      <div className={cn("w-20 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 shadow-sm flex flex-col", className)}>
+      <div className={cn("w-20 bg-sidebar backdrop-blur-xl border-r border-sidebar-border shadow-sm flex flex-col", className)}>
         <div className="p-4 flex flex-col items-center space-y-4">
           <Button
             variant="ghost"
@@ -199,7 +209,7 @@ export function EnhancedSidebar({
                   "flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 relative",
                   isActive
                     ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                    : "text-slate-600 hover:bg-white/80 hover:text-slate-800 hover:shadow-sm"
+                    : "text-slate-600 hover:bg-white/80 hover:text-slate-800 hover:shadow-sm dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200"
                 )}
                 title={item.title}
               >
@@ -223,7 +233,7 @@ export function EnhancedSidebar({
   }
 
   return (
-    <div className={cn("flex flex-col h-full bg-white border-r border-slate-200 shadow-sm", className)}>
+    <div className={cn("flex flex-col h-full bg-sidebar border-r border-sidebar-border shadow-sm", className)}>
       {/* Sidebar Header */}
       <div className="p-6 pb-4">
         <div className="flex items-center justify-between mb-6">
@@ -232,8 +242,8 @@ export function EnhancedSidebar({
               <Video className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-slate-800">Kalil</h2>
-              <p className="text-xs text-slate-500">Video Platform</p>
+              <h2 className="font-bold text-lg text-sidebar-foreground">Kalil</h2>
+              <p className="text-xs text-muted-foreground">Video Platform</p>
             </div>
           </div>
           {onToggleCollapse && (
@@ -304,14 +314,14 @@ export function EnhancedSidebar({
 
         {/* Search Bar */}
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search videos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-9 h-9 bg-white/60 border-slate-200/60 focus:bg-white"
+            className="pl-9 pr-9 h-9 bg-white/60 border-slate-200/60 focus:bg-white dark:bg-slate-800/60 dark:border-slate-700/60 dark:focus:bg-slate-800"
           />
-          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 dark:bg-slate-700 dark:border-slate-600">
             ⌘K
           </kbd>
         </div>
@@ -327,7 +337,7 @@ export function EnhancedSidebar({
                 size="sm"
                 onClick={action.action}
                 className={cn(
-                  "h-16 p-2 flex flex-col items-center justify-center gap-1 relative group hover:shadow-lg transition-all duration-300 border-slate-200",
+                  "h-16 p-2 flex flex-col items-center justify-center gap-1 relative group hover:shadow-lg transition-all duration-300 border-slate-200 dark:border-slate-700",
                   "hover:border-transparent"
                 )}
               >
@@ -335,8 +345,8 @@ export function EnhancedSidebar({
                   "absolute inset-0 opacity-0 group-hover:opacity-100 rounded-md transition-opacity duration-300",
                   action.color
                 )} />
-                <Icon className="h-5 w-5 relative z-10 text-slate-600 group-hover:text-white" />
-                <span className="text-xs font-medium relative z-10 text-slate-700 group-hover:text-white">{action.label}</span>
+                <Icon className="h-5 w-5 relative z-10 text-slate-600 group-hover:text-white dark:text-slate-400" />
+                <span className="text-xs font-medium relative z-10 text-slate-700 group-hover:text-white dark:text-slate-300">{action.label}</span>
                 {action.badge && (
                   <Badge className="absolute -top-1 -right-1 h-4 text-xs px-1" variant="destructive">
                     {action.badge}
@@ -348,7 +358,7 @@ export function EnhancedSidebar({
         </div>
       </div>
 
-      <Separator className="mx-6 bg-slate-200/60" />
+      <Separator className="mx-6 bg-slate-200/60 dark:bg-slate-700/60" />
 
       {/* Navigation */}
       <nav className="flex-1 px-6 py-4 space-y-1 overflow-y-auto">
@@ -365,18 +375,18 @@ export function EnhancedSidebar({
                   "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 group relative overflow-hidden",
                   isActive
                     ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25"
-                    : "text-slate-600 hover:bg-white/80 hover:text-slate-800 hover:shadow-sm"
+                    : "text-slate-600 hover:bg-white/80 hover:text-slate-800 hover:shadow-sm dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200"
                 )}
               >
                 <Icon className={cn(
                   "h-5 w-5 flex-shrink-0 transition-colors",
-                  isActive ? "text-white" : "text-slate-500 group-hover:text-slate-700"
+                  isActive ? "text-white" : "text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300"
                 )} />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold">{item.title}</div>
                   <div className={cn(
                     "text-xs opacity-80 truncate transition-colors",
-                    isActive ? "text-white/90" : "text-slate-500 group-hover:text-slate-600"
+                    isActive ? "text-white/90" : "text-slate-500 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-400"
                   )}>{item.description}</div>
                 </div>
                 {item.badge && (
@@ -398,7 +408,7 @@ export function EnhancedSidebar({
         })}
       </nav>
 
-      <Separator className="mx-6 bg-slate-200/60" />
+      <Separator className="mx-6 bg-slate-200/60 dark:bg-slate-700/60" />
 
       {/* User Profile Section */}
       <div className="p-6 pt-4">
@@ -433,6 +443,35 @@ export function EnhancedSidebar({
               <MessageSquare className="h-4 w-4 mr-2" />
               Feedback
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                {theme === 'dark' ? (
+                  <Moon className="h-4 w-4 mr-2" />
+                ) : theme === 'light' ? (
+                  <Sun className="h-4 w-4 mr-2" />
+                ) : (
+                  <Monitor className="h-4 w-4 mr-2" />
+                )}
+                <span>Theme</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+                  <DropdownMenuRadioItem value="light">
+                    <Sun className="h-4 w-4 mr-2" />
+                    Light
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="dark">
+                    <Moon className="h-4 w-4 mr-2" />
+                    Dark
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="system">
+                    <Monitor className="h-4 w-4 mr-2" />
+                    System
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-red-600"

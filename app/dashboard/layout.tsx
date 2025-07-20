@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
+    <div className="min-h-screen bg-background">
       {/* Only show navbar on mobile */}
       <div className="lg:hidden">
         <SimpleNavbar 
@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         
         {/* Mobile Sidebar */}
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="w-80 p-0 bg-white/95 backdrop-blur-xl border-slate-200">
+          <SheetContent side="left" className="w-80 p-0 bg-white/95 backdrop-blur-xl border-slate-200 dark:bg-slate-900/95 dark:border-slate-700">
             <EnhancedSidebar 
               isAdmin={isAdmin}
               onUploadClick={() => {
@@ -79,7 +79,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </Sheet>
         
         {/* Main Content */}
-        <div className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
+        <div className="flex-1 overflow-auto bg-background">
           <div className="h-full">
             {children}
           </div>

@@ -19,8 +19,8 @@ export function CreditPacksGrid({
   return (
     <div id="buy-credits">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-slate-900">Buy Credits</h2>
-        <p className="text-sm text-slate-600">1 credit = 1 video upload</p>
+        <h2 className="text-xl font-semibold text-foreground">Buy Credits</h2>
+        <p className="text-sm text-muted-foreground">1 credit = 1 video upload</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -30,19 +30,19 @@ export function CreditPacksGrid({
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-5 w-5 bg-slate-200 rounded" />
-                  <div className="h-5 w-24 bg-slate-200 rounded" />
+                  <div className="h-5 w-5 bg-muted rounded" />
+                  <div className="h-5 w-24 bg-muted rounded" />
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <div className="h-8 w-20 bg-slate-200 rounded mb-1" />
-                    <div className="h-4 w-16 bg-slate-200 rounded" />
+                    <div className="h-8 w-20 bg-muted rounded mb-1" />
+                    <div className="h-4 w-16 bg-muted rounded" />
                   </div>
-                  <div className="pt-3 border-t border-slate-200">
-                    <div className="h-7 w-16 bg-slate-200 rounded mb-1" />
-                    <div className="h-3 w-24 bg-slate-200 rounded" />
+                  <div className="pt-3 border-t border-border">
+                    <div className="h-7 w-16 bg-muted rounded mb-1" />
+                    <div className="h-3 w-24 bg-muted rounded" />
                   </div>
-                  <div className="h-10 w-full bg-slate-200 rounded" />
+                  <div className="h-10 w-full bg-muted rounded" />
                 </div>
               </CardContent>
             </Card>
@@ -68,19 +68,19 @@ export function CreditPacksGrid({
                 
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <Package className="h-5 w-5 text-slate-600" />
+                    <Package className="h-5 w-5 text-muted-foreground" />
                     <h3 className="font-semibold text-lg">{pack.name}</h3>
                   </div>
                   
                   <div className="space-y-3">
                     <div>
-                      <p className="text-3xl font-bold text-slate-900">{pack.credits_amount}</p>
-                      <p className="text-sm text-slate-600">credits</p>
+                      <p className="text-3xl font-bold text-foreground">{pack.credits_amount}</p>
+                      <p className="text-sm text-muted-foreground">credits</p>
                     </div>
                     
-                    <div className="pt-3 border-t border-slate-200">
-                      <p className="text-2xl font-bold text-slate-900">₪{pack.price_nis}</p>
-                      <p className="text-xs text-slate-600">₪{pricePerCredit.toFixed(2)} per credit</p>
+                    <div className="pt-3 border-t border-border">
+                      <p className="text-2xl font-bold text-foreground">₪{pack.price_nis}</p>
+                      <p className="text-xs text-muted-foreground">₪{pricePerCredit.toFixed(2)} per credit</p>
                     </div>
                     
                     <Button 

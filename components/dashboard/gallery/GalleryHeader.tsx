@@ -30,10 +30,10 @@ export function GalleryHeader({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold gradient-text">
             Video Gallery
           </h1>
-          <p className="text-lg text-slate-600">Manage your video transcriptions and captions</p>
+          <p className="text-lg text-muted-foreground">Manage your video transcriptions and captions</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -103,7 +103,7 @@ export function GalleryHeader({
       {/* Selection Status */}
       {isSelectionMode && (
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium border border-blue-200">
+          <div className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium border border-primary/20">
             {selectedCount} of {filteredCount} selected
           </div>
         </div>

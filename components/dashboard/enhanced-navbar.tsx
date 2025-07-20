@@ -50,8 +50,8 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
 import { useVideoSubscription } from "@/hooks/use-video-subscription"
 import { formatDistanceToNow } from "date-fns"
-// import { useTheme } from "next-themes" // Commenting out for now
-import toast from "react-hot-toast"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
+import toast from "@/lib/utils/toast"
 
 interface EnhancedNavbarProps {
   onSidebarToggle?: () => void
@@ -76,7 +76,6 @@ export function EnhancedNavbar({
   const { user } = useAuth()
   const { credits } = useCreditBalance()
   const { videos } = useVideoSubscription(user?.id)
-  // const { theme, setTheme } = useTheme() // Commenting out for now
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showCommandSearch, setShowCommandSearch] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -152,7 +151,7 @@ export function EnhancedNavbar({
 
   return (
     <nav className={cn(
-      "h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm",
+      "h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm dark:bg-slate-900/80 dark:border-slate-700/60",
       className
     )}>
       <div className="h-full px-4 md:px-6 lg:px-8 flex items-center justify-between">
@@ -255,15 +254,8 @@ export function EnhancedNavbar({
             </PopoverContent>
           </Popover>
 
-          {/* Theme Toggle - Temporarily disabled */}
-          {/* <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          >
-            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </Button> */}
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           {/* User Menu */}
           <DropdownMenu>

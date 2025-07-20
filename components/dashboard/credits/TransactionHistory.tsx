@@ -28,7 +28,7 @@ export function TransactionHistory({ transactions, transactionsLoading }: Transa
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingDown className="h-5 w-5 text-slate-600" />
+          <TrendingDown className="h-5 w-5 text-muted-foreground" />
           Recent Credit Usage
         </CardTitle>
         <CardDescription>Your latest video processing activity</CardDescription>
@@ -40,15 +40,15 @@ export function TransactionHistory({ transactions, transactionsLoading }: Transa
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-lg animate-pulse">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-slate-200" />
+                  <div className="h-10 w-10 rounded-lg bg-muted" />
                   <div>
-                    <div className="h-4 w-32 bg-slate-200 rounded mb-1" />
-                    <div className="h-3 w-20 bg-slate-200 rounded" />
+                    <div className="h-4 w-32 bg-muted rounded mb-1" />
+                    <div className="h-3 w-20 bg-muted rounded" />
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="h-4 w-12 bg-slate-200 rounded mb-1" />
-                  <div className="h-3 w-20 bg-slate-200 rounded" />
+                  <div className="h-4 w-12 bg-muted rounded mb-1" />
+                  <div className="h-3 w-20 bg-muted rounded" />
                 </div>
               </div>
             ))
@@ -79,7 +79,7 @@ export function TransactionHistory({ transactions, transactionsLoading }: Transa
               }
               
               return (
-                <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${
                       isCredit
@@ -92,16 +92,16 @@ export function TransactionHistory({ transactions, transactionsLoading }: Transa
                       <p className="font-medium text-sm">
                         {formatTransactionReason(transaction.reason, transaction.amount_changed)}
                       </p>
-                      <DateDisplay date={transaction.created_at} format="relative" className="text-xs text-slate-500" />
+                      <DateDisplay date={transaction.created_at} format="relative" className="text-xs text-muted-foreground" />
                     </div>
                   </div>
                   <div className="text-right">
                     <p className={`font-semibold ${
-                      isCredit ? 'text-green-600' : 'text-slate-700'
+                      isCredit ? 'text-green-600' : 'text-foreground'
                     }`}>
                       {isCredit ? '+' : ''}{transaction.amount_changed}
                     </p>
-                    <p className="text-xs text-slate-500">Balance: {transaction.balance_after}</p>
+                    <p className="text-xs text-muted-foreground">Balance: {transaction.balance_after}</p>
                   </div>
                 </div>
               )

@@ -33,10 +33,10 @@ export default function DashboardClient({
       <div className="space-y-6 md:space-y-8">
         {/* Welcome Header */}
         <div className="space-y-3">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold gradient-text">
             Dashboard
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl">
+          <p className="text-lg text-muted-foreground max-w-2xl">
             Welcome back! Here's what's happening with your video projects.
           </p>
         </div>

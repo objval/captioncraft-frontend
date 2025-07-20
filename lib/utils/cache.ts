@@ -60,17 +60,16 @@ export const getUserVideos = cache(async (userId: string): Promise<Video[]> => {
 export const getUserCredits = cache(async (userId: string): Promise<number> => {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from('credit_transactions')
-    .select('amount_changed')
-    .eq('user_id', userId)
+    .from('profiles')
+    .select('credits')
+    .eq('id', userId)
+    .single()
   
   if (error || !data) {
     return 0
   }
   
-  // Calculate total credits from transactions
-  const totalCredits = data.reduce((sum, transaction) => sum + (transaction.amount_changed || 0), 0)
-  return Math.max(0, totalCredits) // Ensure non-negative
+  return data.credits || 0
 })
 
 /**

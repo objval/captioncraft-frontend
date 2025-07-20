@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { createClient } from "@/lib/database/supabase/client"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 
 interface UploadOptions {
   onProgress?: (progress: number) => void

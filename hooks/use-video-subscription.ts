@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { getUserVideos, subscribeToUserVideos } from "@/lib/media/videos"
 import type { Video } from "@/lib/api/api"
 import { createClient } from "@/lib/database/supabase/client"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 
 export function useVideoSubscription(userId: string | undefined, initialVideos?: Video[]) {
   const [videos, setVideos] = useState<Video[]>(initialVideos || [])

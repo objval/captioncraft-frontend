@@ -17,7 +17,7 @@ export function PaymentHistory({ payments, loadingPayments, onBuyCredits }: Paym
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Receipt className="h-5 w-5 text-slate-600" />
+          <Receipt className="h-5 w-5 text-muted-foreground" />
           Purchase History
         </CardTitle>
         <CardDescription>Your recent credit purchases</CardDescription>
@@ -29,18 +29,18 @@ export function PaymentHistory({ payments, loadingPayments, onBuyCredits }: Paym
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-lg animate-pulse">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-slate-200" />
+                  <div className="h-10 w-10 rounded-lg bg-muted" />
                   <div>
-                    <div className="h-4 w-28 bg-slate-200 rounded mb-1" />
-                    <div className="h-3 w-20 bg-slate-200 rounded" />
+                    <div className="h-4 w-28 bg-muted rounded mb-1" />
+                    <div className="h-3 w-20 bg-muted rounded" />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
-                    <div className="h-4 w-16 bg-slate-200 rounded mb-1" />
-                    <div className="h-3 w-20 bg-slate-200 rounded" />
+                    <div className="h-4 w-16 bg-muted rounded mb-1" />
+                    <div className="h-3 w-20 bg-muted rounded" />
                   </div>
-                  <div className="h-6 w-16 bg-slate-200 rounded-full" />
+                  <div className="h-6 w-16 bg-muted rounded-full" />
                 </div>
               </div>
             ))
@@ -62,22 +62,22 @@ export function PaymentHistory({ payments, loadingPayments, onBuyCredits }: Paym
               const hasInvoice = invoice?.invoice_url && payment.status === 'succeeded'
               
               return (
-                <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-slate-100">
-                      <CreditCard className="h-4 w-4 text-slate-600" />
+                    <div className="p-2 rounded-lg bg-muted">
+                      <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="font-medium text-sm">
                         {payment.credit_pack?.name || 'Credit Purchase'}
                       </p>
-                      <DateDisplay date={payment.created_at} format="relative" className="text-xs text-slate-500" />
+                      <DateDisplay date={payment.created_at} format="relative" className="text-xs text-muted-foreground" />
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <p className="font-semibold">₪{payment.amount.toFixed(2)}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {payment.credit_pack?.credits_amount || 0} credits
                       </p>
                     </div>

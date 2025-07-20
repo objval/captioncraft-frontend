@@ -15,7 +15,7 @@ import { EditorHeader } from "@/components/dashboard/editor/EditorHeader"
 import { TranscriptEditor } from "@/components/dashboard/editor/TranscriptEditor"
 import { LoadingState } from "@/components/dashboard/editor/LoadingState"
 import { ErrorState } from "@/components/dashboard/editor/ErrorState"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 
 
 export default function EditorPage() {
@@ -41,7 +41,9 @@ export default function EditorPage() {
     duration,
     setDuration,
     volume,
+    setVolume,
     isMuted,
+    setIsMuted,
     seekTo,
     togglePlayPause,
     handleVolumeChange,

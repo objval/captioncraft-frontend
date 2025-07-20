@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { createClient } from "@/lib/database/supabase/client"
 import { Eye, EyeOff } from "lucide-react"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")

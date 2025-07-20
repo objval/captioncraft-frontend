@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useVideoSubscription } from "@/hooks/use-video-subscription"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 
 // Import gallery components
 import { GalleryHeader } from "@/components/dashboard/gallery/GalleryHeader"

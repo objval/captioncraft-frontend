@@ -1,4 +1,4 @@
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 import type { Video } from "@/lib/api/api"
 
 export async function downloadVideo(

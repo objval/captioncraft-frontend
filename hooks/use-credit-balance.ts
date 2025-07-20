@@ -53,7 +53,7 @@ export function useCreditBalance(userId: string | undefined, initialCredits?: nu
 
     // Set up real-time subscription for credit updates
     const channel = supabase
-      .channel(`credits:profile_id=eq.${userId}`)
+      .channel(`credits-${userId}`)
       .on(
         "postgres_changes",
         {
@@ -63,18 +63,29 @@ export function useCreditBalance(userId: string | undefined, initialCredits?: nu
           filter: `id=eq.${userId}`,
         },
         (payload) => {
-          console.log("Credits updated:", payload.new.credits)
-          setCredits(payload.new.credits || 0)
+          console.log("Credits updated via real-time:", payload)
+          if (payload.new && typeof payload.new === 'object' && 'credits' in payload.new) {
+            const newCredits = Number(payload.new.credits) || 0
+            const oldCredits = payload.old && typeof payload.old === 'object' && 'credits' in payload.old 
+              ? Number(payload.old.credits) : credits
+            console.log(`Real-time update: Credits changed from ${oldCredits} to ${newCredits} (diff: ${newCredits - oldCredits})`)
+            setCredits(newCredits)
+          }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log("Credit subscription status:", status)
+        if (status === "SUBSCRIPTION_ERROR") {
+          console.error("Failed to subscribe to credit updates")
+        }
+      })
 
     cleanup = () => {
       supabase.removeChannel(channel)
     }
 
     return cleanup
-  }, [userId])
+  }, [userId, initialCredits])
 
   const refreshCredits = async () => {
     if (!userId) return

@@ -16,7 +16,7 @@ import { useAdminData } from "@/hooks/use-admin-data"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useAdmin } from "@/hooks/use-admin"
 import { createClient } from "@/lib/database/supabase/client"
-import toast from "react-hot-toast"
+import toast from "@/lib/utils/toast"
 import { useRouter } from "next/navigation"
 
 // Import admin components
@@ -315,7 +315,7 @@ export default function AdminPage() {
         </div>
 
         <TabsContent value="users">
-          <Card className="dashboard-card dashboard-card-dark">
+          <Card className="dashboard-card">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -362,7 +362,7 @@ export default function AdminPage() {
         </TabsContent>
 
         <TabsContent value="videos">
-          <Card className="dashboard-card dashboard-card-dark">
+          <Card className="dashboard-card">
             <CardHeader>
               <CardTitle>Recent Videos</CardTitle>
               <CardDescription>
@@ -376,7 +376,7 @@ export default function AdminPage() {
         </TabsContent>
 
         <TabsContent value="activity">
-          <Card className="dashboard-card dashboard-card-dark">
+          <Card className="dashboard-card">
             <CardHeader>
               <CardTitle>System Activity</CardTitle>
               <CardDescription>Recent actions and system events</CardDescription>

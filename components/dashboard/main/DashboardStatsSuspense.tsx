@@ -1,71 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Video, Clock, TrendingUp, Coins } from "lucide-react"
-import { useMemo } from "react"
-import type { Video as VideoType } from "@/lib/api/api"
+import { DataLoader } from "./SuspenseWrappers"
+import { 
+  AsyncCreditsCount, 
+  AsyncTotalVideos, 
+  AsyncProcessingVideos, 
+  AsyncCompletedVideos,
+  AsyncSuccessRate
+} from "./AsyncDataComponents"
 
-interface DashboardStatsProps {
-  videos: VideoType[]
-  credits: number
-  loading?: boolean
+interface DashboardStatsSuspenseProps {
+  userId: string
 }
 
-export function DashboardStats({ videos, credits, loading }: DashboardStatsProps) {
-  // Memoize statistics calculations
-  const stats = useMemo(() => {
-    const totalVideos = videos.length
-    let completedVideos = 0
-    let processingVideos = 0
-    let readyVideos = 0
-    
-    videos.forEach(video => {
-      switch (video.status) {
-        case "complete":
-          completedVideos++
-          break
-        case "ready":
-          readyVideos++
-          break
-        case "processing":
-        case "uploading":
-        case "burning_in":
-          processingVideos++
-          break
-      }
-    })
-    
-    const successRate = totalVideos > 0 
-      ? ((completedVideos + readyVideos) / totalVideos) * 100 
-      : 0
-      
-    return {
-      totalVideos,
-      completedVideos,
-      processingVideos,
-      readyVideos,
-      successRate
-    }
-  }, [videos])
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="dashboard-card">
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24 shimmer"></div>
-                <div className="h-10 w-10 bg-slate-200 dark:bg-slate-700 rounded-lg shimmer"></div>
-              </div>
-              <div className="h-8 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded w-16 shimmer"></div>
-              <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32 shimmer"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
+export function DashboardStatsSuspense({ userId }: DashboardStatsSuspenseProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       <Card className="stats-card group">
@@ -76,10 +25,15 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
           </div>
         </CardHeader>
         <CardContent className="stats-card-content">
-          <div className="stats-number">{stats.totalVideos}</div>
+          <DataLoader fallback={<span className="stats-number animate-pulse">...</span>}>
+            <AsyncTotalVideos userId={userId} />
+          </DataLoader>
           <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
             <TrendingUp className="h-3 w-3" />
-            {stats.completedVideos} completed this month
+            <DataLoader fallback={<span className="animate-pulse">...</span>}>
+              <AsyncCompletedVideos userId={userId} />
+            </DataLoader>
+            {" "}completed this month
           </p>
         </CardContent>
       </Card>
@@ -92,7 +46,9 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
           </div>
         </CardHeader>
         <CardContent className="stats-card-content">
-          <div className="stats-number">{stats.processingVideos}</div>
+          <DataLoader fallback={<span className="stats-number animate-pulse">...</span>}>
+            <AsyncProcessingVideos userId={userId} />
+          </DataLoader>
           <p className="text-sm text-muted-foreground mt-1">
             Currently being processed
           </p>
@@ -107,9 +63,11 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
           </div>
         </CardHeader>
         <CardContent className="stats-card-content">
-          <div className="stats-number">{stats.successRate.toFixed(1)}%</div>
+          <DataLoader fallback={<span className="stats-number animate-pulse">...</span>}>
+            <AsyncSuccessRate userId={userId} />
+          </DataLoader>
           <div className="mt-3 space-y-1">
-            <Progress value={stats.successRate} className="h-2 bg-slate-100" />
+            <Progress value={0} className="h-2 bg-slate-100" />
             <p className="text-xs text-slate-500">Overall performance</p>
           </div>
         </CardContent>
@@ -123,7 +81,9 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
           </div>
         </CardHeader>
         <CardContent className="stats-card-content">
-          <div className="stats-number">{credits}</div>
+          <DataLoader fallback={<span className="stats-number animate-pulse">...</span>}>
+            <AsyncCreditsCount userId={userId} />
+          </DataLoader>
           <p className="text-sm text-muted-foreground mt-1">
             Available credits
           </p>

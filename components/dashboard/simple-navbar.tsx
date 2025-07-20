@@ -22,6 +22,7 @@ import {
 import { useAuth } from "@/components/providers/auth-provider"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/database/supabase/client"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 interface SimpleNavbarProps {
   onSidebarToggle?: () => void
@@ -39,7 +40,7 @@ export function SimpleNavbar({
 
   return (
     <nav className={cn(
-      "h-16 bg-white border-b border-slate-200 shadow-sm",
+      "h-16 bg-white border-b border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-700",
       className
     )}>
       <div className="h-full px-4 md:px-6 lg:px-8 flex items-center justify-between">
@@ -68,6 +69,9 @@ export function SimpleNavbar({
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+          
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

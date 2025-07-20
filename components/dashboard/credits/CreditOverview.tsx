@@ -73,9 +73,9 @@ export function CreditOverview({
   }, [transactions])
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-slate-50">
+    <Card className="overflow-hidden border-0 shadow-lg bg-card dark:bg-card">
       <CardContent className="p-0">
-        <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+        <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border">
           {/* Current Balance */}
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -84,10 +84,10 @@ export function CreditOverview({
                   <Coins className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Current Balance</p>
-                  <p className="text-3xl font-bold text-slate-900">
+                  <p className="text-sm font-medium text-muted-foreground">Current Balance</p>
+                  <p className="text-3xl font-bold text-foreground">
                     {creditsLoading ? (
-                      <span className="inline-block h-9 w-16 bg-slate-200 rounded animate-pulse" />
+                      <span className="inline-block h-9 w-16 bg-muted rounded animate-pulse" />
                     ) : (
                       credits
                     )}
@@ -97,9 +97,9 @@ export function CreditOverview({
             </div>
             
             {isLowCredits && (
-              <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                 <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                <p className="text-sm text-amber-700">
+                <p className="text-sm text-amber-700 dark:text-amber-400">
                   Running low on credits. Top up to continue processing videos.
                 </p>
               </div>
@@ -108,12 +108,12 @@ export function CreditOverview({
             {!isLowCredits && (
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-slate-600">Activity This Month</p>
-                  <p className="text-xs font-medium text-slate-700">{monthlyStats.creditsUsedThisMonth} credits</p>
+                  <p className="text-sm text-muted-foreground">Activity This Month</p>
+                  <p className="text-xs font-medium text-foreground">{monthlyStats.creditsUsedThisMonth} credits</p>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-500">Videos uploaded</span>
+                    <span className="text-xs text-muted-foreground">Videos uploaded</span>
                     <span className="text-xs font-medium">{monthlyStats.videoUploadsThisMonth}</span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -133,9 +133,9 @@ export function CreditOverview({
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-600">Total Invested</p>
-                <p className="text-3xl font-bold text-slate-900">
+                <p className="text-3xl font-bold text-foreground">
                   {loadingPayments ? (
-                    <span className="inline-block h-9 w-24 bg-slate-200 rounded animate-pulse" />
+                    <span className="inline-block h-9 w-24 bg-muted rounded animate-pulse" />
                   ) : (
                     <>₪{paymentStats.totalSpent.toFixed(2)}</>
                   )}
@@ -144,14 +144,14 @@ export function CreditOverview({
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-600">Credit packs</span>
+                <span className="text-sm text-muted-foreground">Credit packs</span>
                 <span className="text-sm font-medium">{paymentStats.successfulPayments.length}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-600">Total credits</span>
+                <span className="text-sm text-muted-foreground">Total credits</span>
                 <span className="text-sm font-medium">{paymentStats.totalCreditsPurchased}</span>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {paymentStats.totalCreditsPurchased > 0 
                   ? `${((allTimeStats.totalCreditsUsed / paymentStats.totalCreditsPurchased) * 100).toFixed(0)}% utilized`
                   : 'No credits purchased yet'}
@@ -167,9 +167,9 @@ export function CreditOverview({
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-600">All-Time Activity</p>
-                <p className="text-3xl font-bold text-slate-900">
+                <p className="text-3xl font-bold text-foreground">
                   {transactionsLoading ? (
-                    <span className="inline-block h-9 w-12 bg-slate-200 rounded animate-pulse" />
+                    <span className="inline-block h-9 w-12 bg-muted rounded animate-pulse" />
                   ) : (
                     allTimeStats.totalVideoUploads + allTimeStats.totalBurnInJobs
                   )}
@@ -178,11 +178,11 @@ export function CreditOverview({
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-600">Videos uploaded</span>
+                <span className="text-sm text-muted-foreground">Videos uploaded</span>
                 <span className="text-sm font-medium">{allTimeStats.totalVideoUploads}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-600">Captions burned</span>
+                <span className="text-sm text-muted-foreground">Captions burned</span>
                 <span className="text-sm font-medium">{allTimeStats.totalBurnInJobs}</span>
               </div>
             </div>

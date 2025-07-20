@@ -8,7 +8,7 @@ import type { Video } from "@/lib/api/api"
 
 interface VideoPlayerProps {
   video: Video
-  videoRef: RefObject<HTMLVideoElement>
+  videoRef: RefObject<HTMLVideoElement | null>
   showFinalVideo: boolean
   isPlaying: boolean
   currentTime: number

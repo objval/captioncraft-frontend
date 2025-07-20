@@ -94,7 +94,7 @@ function VideoCardComponent({
 
   if (viewMode === "list") {
     return (
-      <Card className={`dashboard-card dashboard-card-dark transition-all duration-200 ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
+      <Card className={`dashboard-card transition-all duration-200 ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
         <CardContent className="p-6">
           <div className="flex gap-6">
             {/* Selection Checkbox */}
@@ -193,7 +193,7 @@ function VideoCardComponent({
   }
 
   return (
-    <Card className={`dashboard-card dashboard-card-dark group transition-all duration-300 hover:scale-105 overflow-hidden ${isSelected ? 'ring-2 ring-blue-500 ring-offset-4' : ''}`}>
+    <Card className={`dashboard-card group transition-all duration-300 hover:scale-105 overflow-hidden ${isSelected ? 'ring-2 ring-blue-500 ring-offset-4' : ''}`}>
       {/* Selection Checkbox for Grid View */}
       {showSelection && (
         <div className="absolute top-3 left-3 z-10">
