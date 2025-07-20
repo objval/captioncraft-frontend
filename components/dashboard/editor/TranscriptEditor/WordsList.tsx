@@ -1,5 +1,5 @@
 import { useState } from "react"
-import type { TranscriptWord } from "@/lib/api"
+import type { TranscriptWord } from "@/lib/api/api"
 import { getTextDirection, isRTLLanguage } from "@/lib/utils/rtl-helpers"
 import { WordEditForm } from "./WordEditForm"
 

@@ -1,6 +1,6 @@
 import { Trophy, Target, CheckCircle2, Sparkles } from "lucide-react"
-import { cn } from "@/lib/utils"
-import type { Video } from "@/lib/api"
+import { cn } from "@/lib/utils/general"
+import type { Video } from "@/lib/api/api"
 
 interface AchievementsListProps {
   videos: Video[]

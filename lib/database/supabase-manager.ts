@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/lib/database/supabase/client"
 import type { User } from "@supabase/supabase-js"
 
 /**

@@ -2,7 +2,7 @@
  * User registration utilities and verification
  */
 
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/lib/database/supabase/client"
 
 /**
  * Verify that a user has received their welcome credits

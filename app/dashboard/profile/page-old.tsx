@@ -12,9 +12,9 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
 import { useVideoSubscription } from "@/hooks/use-video-subscription"
 import { useTransactions, getTransactionDisplayName } from "@/hooks/use-transactions"
-import { getUserProfile, updateUserProfile } from "@/lib/profiles"
-import { getUserPayments } from "@/lib/payments"
-import { api, type UserProfile, type Payment } from "@/lib/api"
+import { getUserProfile, updateUserProfile } from "@/lib/services/profiles"
+import { getUserPayments } from "@/lib/services/payments"
+import { api, type UserProfile, type Payment } from "@/lib/api/api"
 import { 
   User, 
   Mail, 

@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/providers/auth-provider"
-import { getUserPayments, getUserPaymentStats } from "@/lib/payments"
+import { getUserPayments, getUserPaymentStats } from "@/lib/services/payments"
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -22,7 +22,7 @@ import {
   Target
 } from "lucide-react"
 import { formatDistanceToNow, format, startOfMonth, endOfMonth, subMonths } from "date-fns"
-import type { Payment } from "@/lib/api"
+import type { Payment } from "@/lib/api/api"
 
 interface PaymentStats {
   totalPayments: number

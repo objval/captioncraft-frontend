@@ -9,7 +9,7 @@ import { useCreditBalance } from "@/hooks/use-credit-balance"
 import { useAuth } from "@/components/providers/auth-provider"
 import { Upload, X, AlertCircle, Coins, CheckCircle } from "lucide-react"
 import toast from "react-hot-toast"
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/lib/database/supabase/client"
 
 interface UploadModalProps {
   isOpen: boolean

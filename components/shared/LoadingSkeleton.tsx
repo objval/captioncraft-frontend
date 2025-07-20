@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/general"
 
 // Stats Card Skeleton
 export function StatsCardSkeleton() {

@@ -9,7 +9,7 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { useVideoSubscription } from "@/hooks/use-video-subscription"
 import { useAdmin } from "@/hooks/use-admin"
 import { ModalSkeleton } from "@/components/shared/LoadingSkeleton"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/general"
 
 // Lazy load the upload modal
 const UploadModal = lazy(() => 

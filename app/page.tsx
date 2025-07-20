@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server"
+import { createClient } from "@/lib/database/supabase/server"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Play, Zap, Edit, Download, Sparkles, Shield, Globe, Users } from "lucide-react"

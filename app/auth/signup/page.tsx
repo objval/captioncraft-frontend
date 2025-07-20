@@ -12,8 +12,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { createClient } from "@/utils/supabase/client"
-import { createOrUpdateProfile } from "@/lib/profile-creation"
+import { createClient } from "@/lib/database/supabase/client"
+import { createOrUpdateProfile } from "@/lib/media/profile-creation"
 import { 
   Eye, 
   EyeOff, 

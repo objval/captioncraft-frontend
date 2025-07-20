@@ -1,5 +1,5 @@
-import { supabaseManager } from "@/lib/supabase-manager"
-import type { CreditPack } from "@/lib/api"
+import { supabaseManager } from "@/lib/database/supabase-manager"
+import type { CreditPack } from "@/lib/api/api"
 
 /**
  * Get all available credit packs

@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useVideoSubscription } from "@/hooks/use-video-subscription"
-import { api } from "@/lib/api"
 import toast from "react-hot-toast"
 
 // Import gallery components
@@ -11,6 +10,7 @@ import { GalleryHeader } from "@/components/dashboard/gallery/GalleryHeader"
 import { GalleryFilters } from "@/components/dashboard/gallery/GalleryFilters"
 import { VideoGrid } from "@/components/dashboard/gallery/VideoGrid"
 import { GallerySkeleton } from "@/components/dashboard/gallery/GallerySkeleton"
+import { api } from "@/lib/api/api"
 
 export default function GalleryPage() {
   const [searchQuery, setSearchQuery] = useState("")

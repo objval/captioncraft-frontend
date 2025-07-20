@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Activity, Trophy } from "lucide-react"
 import { AchievementsList } from "./AchievementsList"
-import type { Video } from "@/lib/api"
+import type { Video } from "@/lib/api/api"
 
 interface ActivityStatsProps {
   videos: Video[]

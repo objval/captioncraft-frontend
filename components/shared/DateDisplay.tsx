@@ -5,7 +5,7 @@ import {
   formatDateTime,
   formatTableDate 
 } from "@/lib/utils/date-helpers"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/general"
 
 interface DateDisplayProps {
   date: Date | string

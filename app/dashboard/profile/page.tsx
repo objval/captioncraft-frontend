@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
 import { useVideoSubscription } from "@/hooks/use-video-subscription"
-import { getUserProfile, updateUserProfile } from "@/lib/profiles"
-import { type UserProfile } from "@/lib/api"
+import { getUserProfile, updateUserProfile } from "@/lib/services/profiles"
+import { type UserProfile } from "@/lib/api/api"
 import toast from "react-hot-toast"
 
 // Import profile components

@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/lib/database/supabase/client"
 
-export function useCreditBalance(userId: string | undefined) {
-  const [credits, setCredits] = useState(0)
-  const [loading, setLoading] = useState(true)
+export function useCreditBalance(userId: string | undefined, initialCredits?: number) {
+  const [credits, setCredits] = useState(initialCredits ?? 0)
+  const [loading, setLoading] = useState(!initialCredits)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -46,7 +46,10 @@ export function useCreditBalance(userId: string | undefined) {
       }
     }
 
-    fetchCredits()
+    // Only fetch if no initial data provided
+    if (initialCredits === undefined) {
+      fetchCredits()
+    }
 
     // Set up real-time subscription for credit updates
     const channel = supabase

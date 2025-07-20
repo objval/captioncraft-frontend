@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/general"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { 
@@ -44,7 +44,7 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/lib/database/supabase/client"
 
 interface EnhancedSidebarProps {
   isAdmin: boolean

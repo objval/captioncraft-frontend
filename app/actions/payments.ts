@@ -1,14 +1,14 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
-import { createServiceRoleClient } from '@/utils/supabase/service-role'
+import { createClient } from '@/lib/database/supabase/server'
+import { createServiceRoleClient } from '@/lib/database/supabase/service-role'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { generatePrintHeshUrl } from '@/lib/invoices'
-import { requestHypaySignature, sanitizeParams } from '@/lib/hypay-crypto'
-import { paymentLogger } from '@/lib/payment-logger'
-import { getHypayConfig, logTestEnvironmentStatus, createTestModePayment } from '@/lib/hypay-test-utils'
-import { IdempotencyService, withIdempotency } from '@/lib/idempotency'
+import { generatePrintHeshUrl } from '@/lib/payments/invoices'
+import { requestHypaySignature, sanitizeParams } from '@/lib/payments/hypay/crypto'
+import { paymentLogger } from '@/lib/payments/payment-logger'
+import { getHypayConfig, logTestEnvironmentStatus, createTestModePayment } from '@/lib/payments/hypay/test-utils'
+import { IdempotencyService, withIdempotency } from '@/lib/payments/idempotency'
 
 // Get Hypay configuration (automatically switches between test/production)
 const HYPAY_CONFIG = getHypayConfig()

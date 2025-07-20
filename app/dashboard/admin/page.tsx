@@ -15,7 +15,7 @@ import {
 import { useAdminData } from "@/hooks/use-admin-data"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useAdmin } from "@/hooks/use-admin"
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/lib/database/supabase/client"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 

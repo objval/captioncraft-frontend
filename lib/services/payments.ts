@@ -1,5 +1,5 @@
-import { supabaseManager } from "@/lib/supabase-manager"
-import type { Payment } from "@/lib/api"
+import { supabaseManager } from "@/lib/database/supabase-manager"
+import type { Payment } from "@/lib/api/api"
 
 /**
  * Get all payments for the current user

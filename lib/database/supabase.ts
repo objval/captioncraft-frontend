@@ -1,6 +1,6 @@
 // DEPRECATED: Use @/utils/supabase/client instead
 // This file is kept for backward compatibility
-import { createClient as createNewClient } from '@/utils/supabase/client'
+import { createClient as createNewClient } from '@/lib/database/supabase/client'
 
 /**
  * @deprecated Use createClient from @/utils/supabase/client instead

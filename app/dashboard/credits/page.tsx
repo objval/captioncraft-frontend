@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
 import { useTransactions } from "@/hooks/use-transactions"
-import { getCreditPacks } from "@/lib/credit-packs"
-import { getUserPayments } from "@/lib/payments"
-import type { CreditPack, Payment } from "@/lib/api"
+import { getCreditPacks } from "@/lib/payments/credit-packs"
+import { getUserPayments } from "@/lib/services/payments"
+import type { CreditPack, Payment } from "@/lib/api/api"
 import toast from "react-hot-toast"
 import { initiateHypayPayment } from "@/app/actions/payments"
 
@@ -71,7 +71,7 @@ export default function CreditsPage() {
 
     setPurchasing(pack.id)
     try {
-      const result = await createPayment(pack.id)
+      const result = await initiateHypayPayment(pack.id)
       if (result.paymentUrl) {
         window.location.href = result.paymentUrl
       }

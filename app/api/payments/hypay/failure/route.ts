@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { handlePaymentFailure } from '@/app/actions/payments'
-import { verifyPaymentCallback } from '@/lib/hypay-crypto'
-import { getUserErrorMessage, getHypayError } from '@/lib/hypay-error-codes'
-import { paymentLogger } from '@/lib/payment-logger'
+import { verifyPaymentCallback } from '@/lib/payments/hypay/crypto'
+import { getUserErrorMessage, getHypayError } from '@/lib/payments/hypay/error-codes'
+import { paymentLogger } from '@/lib/payments/payment-logger'
 
 export async function GET(request: NextRequest) {
   try {

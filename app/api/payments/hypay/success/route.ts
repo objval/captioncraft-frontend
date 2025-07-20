@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { handlePaymentSuccess } from '@/app/actions/payments'
-import { verifyPaymentCallback } from '@/lib/hypay-crypto'
-import { paymentLogger } from '@/lib/payment-logger'
+import { verifyPaymentCallback } from '@/lib/payments/hypay/crypto'
+import { paymentLogger } from '@/lib/payments/payment-logger'
 
 export async function GET(request: NextRequest) {
   try {

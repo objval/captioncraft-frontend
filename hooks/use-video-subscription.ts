@@ -1,14 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getUserVideos, subscribeToUserVideos } from "@/lib/videos"
-import type { Video } from "@/lib/api"
-import { createClient } from "@/utils/supabase/client"
+import { getUserVideos, subscribeToUserVideos } from "@/lib/media/videos"
+import type { Video } from "@/lib/api/api"
+import { createClient } from "@/lib/database/supabase/client"
 import toast from "react-hot-toast"
 
-export function useVideoSubscription(userId: string | undefined) {
-  const [videos, setVideos] = useState<Video[]>([])
-  const [loading, setLoading] = useState(true)
+export function useVideoSubscription(userId: string | undefined, initialVideos?: Video[]) {
+  const [videos, setVideos] = useState<Video[]>(initialVideos || [])
+  const [loading, setLoading] = useState(!initialVideos)
   const supabase = createClient()
 
   useEffect(() => {
@@ -29,7 +29,10 @@ export function useVideoSubscription(userId: string | undefined) {
       }
     }
 
-    fetchVideos()
+    // Only fetch if no initial data provided
+    if (!initialVideos) {
+      fetchVideos()
+    }
 
     // Set up real-time subscription using the videos library
     cleanup = subscribeToUserVideos(userId, (payload) => {

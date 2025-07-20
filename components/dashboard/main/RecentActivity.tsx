@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { StatusBadge, StatusIcon } from "@/components/shared/StatusBadge"
 import { Activity, Video, Calendar } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
-import type { Video as VideoType } from "@/lib/api"
+import type { Video as VideoType } from "@/lib/api/api"
 
 interface RecentActivityProps {
   videos: VideoType[]

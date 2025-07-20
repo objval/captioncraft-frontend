@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import type { Video } from '@/lib/api'
+import { createClient } from '@/lib/database/supabase/client'
+import type { Video } from '@/lib/api/api'
 import toast from 'react-hot-toast'
 
 export function useVideoSubscription(

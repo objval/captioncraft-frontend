@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Mail, Calendar, Phone, MapPin, Edit2 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
-import type { UserProfile } from "@/lib/api"
+import type { UserProfile } from "@/lib/api/api"
 import type { User } from "@supabase/supabase-js"
 
 interface ProfileCardProps {

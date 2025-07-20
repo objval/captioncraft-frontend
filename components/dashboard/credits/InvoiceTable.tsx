@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { DateDisplay } from "@/components/shared/DateDisplay"
 import { Receipt, FileText, ExternalLink } from "lucide-react"
-import type { Payment } from "@/lib/api"
+import type { Payment } from "@/lib/api/api"
 
 interface InvoiceTableProps {
   payments: Payment[]

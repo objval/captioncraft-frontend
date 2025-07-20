@@ -16,7 +16,7 @@ import {
   FileText,
   Sparkles
 } from "lucide-react"
-import type { Transaction } from "@/lib/api"
+import type { Transaction } from "@/lib/api/api"
 
 interface TransactionHistoryProps {
   transactions: Transaction[]

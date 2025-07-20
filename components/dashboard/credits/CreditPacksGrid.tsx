@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Package } from "lucide-react"
-import type { CreditPack } from "@/lib/api"
+import type { CreditPack } from "@/lib/api/api"
 
 interface CreditPacksGridProps {
   creditPacks: CreditPack[]

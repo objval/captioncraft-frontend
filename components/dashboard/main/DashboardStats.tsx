@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Video, Clock, TrendingUp, Coins } from "lucide-react"
-import type { Video as VideoType } from "@/lib/api"
+import { useMemo } from "react"
+import type { Video as VideoType } from "@/lib/api/api"
 
 interface DashboardStatsProps {
   videos: VideoType[]
@@ -10,17 +11,41 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ videos, credits, loading }: DashboardStatsProps) {
-  // Calculate statistics
-  const totalVideos = videos.length
-  const completedVideos = videos.filter(v => v.status === "complete").length
-  const processingVideos = videos.filter(v => 
-    v.status === "processing" || v.status === "uploading" || v.status === "burning_in"
-  ).length
-  const readyVideos = videos.filter(v => v.status === "ready").length
-  
-  const successRate = totalVideos > 0 
-    ? ((completedVideos + readyVideos) / totalVideos) * 100 
-    : 0
+  // Memoize statistics calculations
+  const stats = useMemo(() => {
+    const totalVideos = videos.length
+    let completedVideos = 0
+    let processingVideos = 0
+    let readyVideos = 0
+    
+    videos.forEach(video => {
+      switch (video.status) {
+        case "complete":
+          completedVideos++
+          break
+        case "ready":
+          readyVideos++
+          break
+        case "processing":
+        case "uploading":
+        case "burning_in":
+          processingVideos++
+          break
+      }
+    })
+    
+    const successRate = totalVideos > 0 
+      ? ((completedVideos + readyVideos) / totalVideos) * 100 
+      : 0
+      
+    return {
+      totalVideos,
+      completedVideos,
+      processingVideos,
+      readyVideos,
+      successRate
+    }
+  }, [videos])
 
   if (loading) {
     return (
@@ -51,10 +76,10 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
           </div>
         </CardHeader>
         <CardContent className="stats-card-content">
-          <div className="stats-number">{totalVideos}</div>
+          <div className="stats-number">{stats.totalVideos}</div>
           <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
             <TrendingUp className="h-3 w-3" />
-            {completedVideos} completed this month
+            {stats.completedVideos} completed this month
           </p>
         </CardContent>
       </Card>
@@ -67,7 +92,7 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
           </div>
         </CardHeader>
         <CardContent className="stats-card-content">
-          <div className="stats-number">{processingVideos}</div>
+          <div className="stats-number">{stats.processingVideos}</div>
           <p className="text-sm text-slate-500 mt-1">
             Currently being processed
           </p>
@@ -82,9 +107,9 @@ export function DashboardStats({ videos, credits, loading }: DashboardStatsProps
           </div>
         </CardHeader>
         <CardContent className="stats-card-content">
-          <div className="stats-number">{successRate.toFixed(1)}%</div>
+          <div className="stats-number">{stats.successRate.toFixed(1)}%</div>
           <div className="mt-3 space-y-1">
-            <Progress value={successRate} className="h-2 bg-slate-100" />
+            <Progress value={stats.successRate} className="h-2 bg-slate-100" />
             <p className="text-xs text-slate-500">Overall performance</p>
           </div>
         </CardContent>

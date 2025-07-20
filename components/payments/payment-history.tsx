@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAuth } from "@/components/providers/auth-provider"
-import { getUserPayments } from "@/lib/payments"
+import { getUserPayments } from "@/lib/services/payments"
 import { StatusBadge, StatusIcon } from "@/components/shared/StatusBadge"
 import { 
   Search, 
@@ -22,7 +22,7 @@ import {
   RefreshCw
 } from "lucide-react"
 import { formatDistanceToNow, format } from "date-fns"
-import type { Payment } from "@/lib/api"
+import type { Payment } from "@/lib/api/api"
 import toast from "react-hot-toast"
 
 interface PaymentFilters {
@@ -165,7 +165,7 @@ export default function PaymentHistory() {
       toast.loading("Redirecting to payment page...")
       
       // Re-initiate payment for the same credit pack
-      const { api } = await import("@/lib/api")
+      const { api } = await import("@/lib/api/api")
       const response = await api.initiatePayment(payment.credit_pack_id)
       
       window.location.href = response.paymentPageUrl

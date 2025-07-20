@@ -1,53 +1,19 @@
-"use client"
+import { getUser, getUserVideos, getUserCredits } from '@/lib/utils/cache'
+import { redirect } from 'next/navigation'
+import DashboardClient from './dashboard-client'
 
-import { useAuth } from "@/components/providers/auth-provider"
-import { useVideoSubscription } from "@/hooks/use-video-subscription"
-import { useCreditBalance } from "@/hooks/use-credit-balance"
-
-// Import dashboard components
-import { DashboardStats } from "@/components/dashboard/main/DashboardStats"
-import { VideoStatusOverview } from "@/components/dashboard/main/VideoStatusOverview"
-import { RecentActivity } from "@/components/dashboard/main/RecentActivity"
-import { QuickActions } from "@/components/dashboard/main/QuickActions"
-import { DashboardSkeleton } from "@/components/dashboard/main/DashboardSkeleton"
-
-export default function DashboardPage() {
-  const { user } = useAuth()
-  const { videos, loading } = useVideoSubscription(user?.id)
-  const { credits } = useCreditBalance(user?.id)
-
-  if (loading) {
-    return <DashboardSkeleton />
+export default async function DashboardPage() {
+  const user = await getUser()
+  
+  if (!user) {
+    redirect('/sign-in')
   }
 
-  return (
-    <div className="min-h-screen p-4 lg:p-8">
-      <div className="space-y-6 md:space-y-8">
-        {/* Welcome Header */}
-        <div className="space-y-3">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-            Dashboard
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl">
-            Welcome back! Here's what's happening with your video projects.
-          </p>
-        </div>
+  // Prefetch data in parallel
+  const [videos, credits] = await Promise.all([
+    getUserVideos(user.id),
+    getUserCredits(user.id)
+  ])
 
-        {/* Stats Cards */}
-        <DashboardStats videos={videos} credits={credits} />
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-          {/* Video Status Overview */}
-          <VideoStatusOverview videos={videos} />
-
-          {/* Recent Activity */}
-          <RecentActivity videos={videos} />
-        </div>
-
-        {/* Quick Actions */}
-        <QuickActions />
-      </div>
-    </div>
-  )
+  return <DashboardClient initialVideos={videos} initialCredits={credits} />
 }

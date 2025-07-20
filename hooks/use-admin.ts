@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/lib/database/supabase/client"
 
 export function useAdmin() {
   const { user } = useAuth()

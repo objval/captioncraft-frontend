@@ -13,7 +13,15 @@
       "Bash(tail:*)",
       "mcp__supabase__search_docs",
       "mcp__mcp-sequentialthinking-tools__sequentialthinking_tools",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(# 1. API files\nmv lib/api.ts lib/api/api.ts 2>/dev/null || echo \"\"lib/api.ts not found\"\"\nmv lib/query-client.ts lib/api/query-client.ts 2>/dev/null || echo \"\"lib/query-client.ts not found\"\"\nmv lib/error-handling.ts lib/api/error-handling.ts 2>/dev/null || echo \"\"lib/error-handling.ts not found\"\"\n\n# 2. Database files\nmv lib/utils/supabase/client.ts lib/database/supabase/client.ts 2>/dev/null || echo \"\"lib/utils/supabase/client.ts not found\"\"\nmv lib/utils/supabase/server.ts lib/database/supabase/server.ts 2>/dev/null || echo \"\"lib/utils/supabase/server.ts not found\"\"\nmv lib/utils/supabase/service-role.ts lib/database/supabase/service-role.ts 2>/dev/null || echo \"\"lib/utils/supabase/service-role.ts not found\"\"\nmv lib/utils/supabase/middleware.ts lib/database/supabase/middleware.ts 2>/dev/null || echo \"\"lib/utils/supabase/middleware.ts not found\"\"\nmv lib/supabase-manager.ts lib/database/supabase-manager.ts 2>/dev/null || echo \"\"lib/supabase-manager.ts not found\"\"\nmv lib/supabase.ts lib/database/supabase.ts 2>/dev/null || echo \"\"lib/supabase.ts not found\"\")",
+      "Bash(# 3. Payment files\nmv lib/hypay-crypto.ts lib/payments/hypay/crypto.ts 2>/dev/null || echo \"\"lib/hypay-crypto.ts not found\"\"\nmv lib/hypay-error-codes.ts lib/payments/hypay/error-codes.ts 2>/dev/null || echo \"\"lib/hypay-error-codes.ts not found\"\"\nmv lib/hypay-test-utils.ts lib/payments/hypay/test-utils.ts 2>/dev/null || echo \"\"lib/hypay-test-utils.ts not found\"\"\nmv lib/invoices.ts lib/payments/invoices.ts 2>/dev/null || echo \"\"lib/invoices.ts not found\"\"\nmv lib/payment-logger.ts lib/payments/payment-logger.ts 2>/dev/null || echo \"\"lib/payment-logger.ts not found\"\"\nmv lib/credit-packs.ts lib/payments/credit-packs.ts 2>/dev/null || echo \"\"lib/credit-packs.ts not found\"\"\nmv lib/idempotency.ts lib/payments/idempotency.ts 2>/dev/null || echo \"\"lib/idempotency.ts not found\"\"\n\n# 4. Media files\nmv lib/videos.ts lib/media/videos.ts 2>/dev/null || echo \"\"lib/videos.ts not found\"\"\nmv lib/profile-creation.ts lib/media/profile-creation.ts 2>/dev/null || echo \"\"lib/profile-creation.ts not found\"\")",
+      "Bash(# 5. Service files\nmv lib/profiles.ts lib/services/profiles.ts 2>/dev/null || echo \"\"lib/profiles.ts not found\"\"\nmv lib/payments.ts lib/services/payments.ts 2>/dev/null || echo \"\"lib/payments.ts not found\"\"\nmv lib/credits.ts lib/services/credits.ts 2>/dev/null || echo \"\"lib/credits.ts not found\"\"\n\n# 6. Utils files\nmv lib/registration-utils.ts lib/utils/validation/registration-utils.ts 2>/dev/null || echo \"\"lib/registration-utils.ts not found\"\"\nmv lib/server-utils.ts lib/utils/server-utils.ts 2>/dev/null || echo \"\"lib/server-utils.ts not found\"\"\nmv lib/performance.ts lib/utils/performance.ts 2>/dev/null || echo \"\"lib/performance.ts not found\"\"\nmv lib/utils.ts lib/utils/general.ts 2>/dev/null || echo \"\"lib/utils.ts not found\"\")",
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(true)",
+      "Bash(tree:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
-import { checkProfileCompleteness, ensureWelcomeCredits } from "@/lib/profile-creation"
+import { checkProfileCompleteness, ensureWelcomeCredits } from "@/lib/media/profile-creation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/lib/database/supabase/client"
 import { CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react"
 
 export default function DebugProfilePage() {

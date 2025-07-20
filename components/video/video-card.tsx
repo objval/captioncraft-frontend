@@ -5,10 +5,12 @@ import type React from "react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import type { Video, VideoStatus } from "@/lib/api"
+import type { Video, VideoStatus } from "@/lib/api/api"
 import { Play, Edit, Download, Trash2, RefreshCw, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
+import { VideoThumbnail } from "./VideoThumbnail"
+import { memo } from "react"
 
 interface VideoCardProps {
   video: Video
@@ -74,7 +76,7 @@ const statusConfig: Record<
   },
 }
 
-export function VideoCard({ 
+function VideoCardComponent({ 
   video, 
   onDeleteAction, 
   onRetryAction, 
@@ -109,17 +111,11 @@ export function VideoCard({
 
             {/* Enhanced Thumbnail */}
             <div className="w-40 h-24 bg-slate-100 relative flex-shrink-0 rounded-xl overflow-hidden shadow-sm group">
-              {video.thumbnail_url ? (
-                <img
-                  src={video.thumbnail_url || "/placeholder.svg"}
-                  alt={video.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-xl"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl">
-                  <Play className="h-8 w-8 text-slate-400" />
-                </div>
-              )}
+              <VideoThumbnail 
+                thumbnailUrl={video.thumbnail_url} 
+                title={video.title}
+                className="group-hover:scale-105 transition-transform duration-300"
+              />
               
               {/* Status Badge */}
               <div className="absolute top-2 right-2">
@@ -213,17 +209,11 @@ export function VideoCard({
       <CardContent className="p-0">
         {/* Enhanced Thumbnail */}
         <div className="aspect-video bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden rounded-t-xl">
-          {video.thumbnail_url ? (
-            <img
-              src={video.thumbnail_url || "/placeholder.svg"}
-              alt={video.title}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 rounded-t-xl"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 rounded-t-xl">
-              <Play className="h-16 w-16 text-slate-400 group-hover:text-slate-500 transition-colors" />
-            </div>
-          )}
+          <VideoThumbnail 
+            thumbnailUrl={video.thumbnail_url} 
+            title={video.title}
+            className="w-full h-full group-hover:scale-110 transition-transform duration-500"
+          />
 
           {/* Status Badge */}
           <div className="absolute top-3 right-3">
@@ -305,3 +295,17 @@ export function VideoCard({
     </Card>
   )
 }
+
+// Memoize the component to prevent unnecessary re-renders
+export const VideoCard = memo(VideoCardComponent, (prevProps, nextProps) => {
+  // Only re-render if these specific props change
+  return (
+    prevProps.video.id === nextProps.video.id &&
+    prevProps.video.status === nextProps.video.status &&
+    prevProps.video.title === nextProps.video.title &&
+    prevProps.video.thumbnail_url === nextProps.video.thumbnail_url &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.showSelection === nextProps.showSelection &&
+    prevProps.viewMode === nextProps.viewMode
+  )
+})

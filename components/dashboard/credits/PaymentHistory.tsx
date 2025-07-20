@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge"
 import { DateDisplay } from "@/components/shared/DateDisplay"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { CreditCard, Receipt, FileText } from "lucide-react"
-import type { Payment } from "@/lib/api"
+import type { Payment } from "@/lib/api/api"
 
 interface PaymentHistoryProps {
   payments: Payment[]

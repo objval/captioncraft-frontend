@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/database/supabase/server'
 import { paymentLogger } from './payment-logger'
 
 export interface IdempotencyRecord {

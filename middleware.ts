@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware'
+import { updateSession } from '@/lib/database/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
 
 // Global flag to ensure we only log once

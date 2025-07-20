@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/database/supabase/client'
 
 export interface ProfileData {
   firstName: string

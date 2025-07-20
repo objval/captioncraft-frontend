@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/general"
 import { 
   Menu,
   Video,
@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/lib/database/supabase/client"
 
 interface SimpleNavbarProps {
   onSidebarToggle?: () => void

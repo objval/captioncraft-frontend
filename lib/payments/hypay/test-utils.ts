@@ -307,7 +307,7 @@ export async function createTestModePayment(
   const config = getHypayConfig()
   
   // Import createClient dynamically to avoid circular dependencies
-  const { createClient } = await import('@/utils/supabase/server')
+  const { createClient } = await import('@/lib/database/supabase/server')
   const supabase = await createClient()
   
   const { data, error } = await supabase

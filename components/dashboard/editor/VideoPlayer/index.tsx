@@ -4,7 +4,7 @@ import { Film } from "lucide-react"
 import { VideoControls } from "./VideoControls"
 import { ProgressBar } from "./ProgressBar"
 import { VolumeControl } from "./VolumeControl"
-import type { Video } from "@/lib/api"
+import type { Video } from "@/lib/api/api"
 
 interface VideoPlayerProps {
   video: Video

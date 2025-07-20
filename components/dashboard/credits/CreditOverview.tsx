@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle, Coins, CreditCard, TrendingUp, FileText } from "lucide-react"
-import type { Payment, Transaction } from "@/lib/api"
+import { useMemo } from "react"
+import type { Payment, Transaction } from "@/lib/api/api"
 
 interface CreditOverviewProps {
   credits: number
@@ -19,43 +20,57 @@ export function CreditOverview({
   transactions,
   transactionsLoading,
 }: CreditOverviewProps) {
-  // Calculate stats
-  const successfulPayments = payments.filter(p => p.status === 'succeeded')
-  const totalSpent = successfulPayments.reduce((sum, p) => sum + p.amount, 0)
-  const invoiceCount = successfulPayments.filter(p => p.invoices?.[0]?.invoice_url).length
+  // Memoize payment calculations
+  const paymentStats = useMemo(() => {
+    const successfulPayments = payments.filter(p => p.status === 'succeeded')
+    const totalSpent = successfulPayments.reduce((sum, p) => sum + p.amount, 0)
+    const invoiceCount = successfulPayments.filter(p => p.invoices?.[0]?.invoice_url).length
+    const totalCreditsPurchased = successfulPayments.reduce((sum, p) => sum + (p.credit_pack?.credits_amount || 0), 0)
+    
+    return {
+      successfulPayments,
+      totalSpent,
+      invoiceCount,
+      totalCreditsPurchased
+    }
+  }, [payments])
 
   const isLowCredits = credits < 10
 
-  // Calculate this month's stats
-  const currentMonth = new Date().getMonth()
-  const currentYear = new Date().getFullYear()
-  
-  const thisMonthTransactions = transactions.filter(t => {
-    const transactionDate = new Date(t.created_at)
-    return transactionDate.getMonth() === currentMonth && 
-           transactionDate.getFullYear() === currentYear
-  })
+  // Memoize monthly stats calculations
+  const monthlyStats = useMemo(() => {
+    const currentMonth = new Date().getMonth()
+    const currentYear = new Date().getFullYear()
+    
+    const thisMonthTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.created_at)
+      return transactionDate.getMonth() === currentMonth && 
+             transactionDate.getFullYear() === currentYear
+    })
 
-  // Count video uploads this month (-1 credit transactions)
-  const videoUploadsThisMonth = thisMonthTransactions.filter(t => t.amount_changed === -1).length
-  
-  // Count burn-in jobs this month (-5 credit transactions)
-  const burnInJobsThisMonth = thisMonthTransactions.filter(t => t.amount_changed === -5).length
-  
-  // Calculate total credits used this month
-  const creditsUsedThisMonth = thisMonthTransactions
-    .filter(t => t.amount_changed < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount_changed), 0)
+    return {
+      videoUploadsThisMonth: thisMonthTransactions.filter(t => t.amount_changed === -1).length,
+      burnInJobsThisMonth: thisMonthTransactions.filter(t => t.amount_changed === -5).length,
+      creditsUsedThisMonth: thisMonthTransactions
+        .filter(t => t.amount_changed < 0)
+        .reduce((sum, t) => sum + Math.abs(t.amount_changed), 0)
+    }
+  }, [transactions])
 
-  // Calculate all-time stats
-  const totalVideoUploads = transactions.filter(t => t.amount_changed === -1).length
-  const totalBurnInJobs = transactions.filter(t => t.amount_changed === -5).length
-  
-  // Calculate total credits purchased and used
-  const totalCreditsPurchased = successfulPayments.reduce((sum, p) => sum + (p.credit_pack?.credits_amount || 0), 0)
-  const totalCreditsUsed = transactions
-    .filter(t => t.amount_changed < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount_changed), 0)
+  // Memoize all-time stats calculations
+  const allTimeStats = useMemo(() => {
+    const totalVideoUploads = transactions.filter(t => t.amount_changed === -1).length
+    const totalBurnInJobs = transactions.filter(t => t.amount_changed === -5).length
+    const totalCreditsUsed = transactions
+      .filter(t => t.amount_changed < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount_changed), 0)
+    
+    return {
+      totalVideoUploads,
+      totalBurnInJobs,
+      totalCreditsUsed
+    }
+  }, [transactions])
 
   return (
     <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-slate-50">
@@ -94,16 +109,16 @@ export function CreditOverview({
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-slate-600">Activity This Month</p>
-                  <p className="text-xs font-medium text-slate-700">{creditsUsedThisMonth} credits</p>
+                  <p className="text-xs font-medium text-slate-700">{monthlyStats.creditsUsedThisMonth} credits</p>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-slate-500">Videos uploaded</span>
-                    <span className="text-xs font-medium">{videoUploadsThisMonth}</span>
+                    <span className="text-xs font-medium">{monthlyStats.videoUploadsThisMonth}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-slate-500">Captions burned</span>
-                    <span className="text-xs font-medium">{burnInJobsThisMonth}</span>
+                    <span className="text-xs font-medium">{monthlyStats.burnInJobsThisMonth}</span>
                   </div>
                 </div>
               </div>
@@ -122,7 +137,7 @@ export function CreditOverview({
                   {loadingPayments ? (
                     <span className="inline-block h-9 w-24 bg-slate-200 rounded animate-pulse" />
                   ) : (
-                    <>₪{totalSpent.toFixed(2)}</>
+                    <>₪{paymentStats.totalSpent.toFixed(2)}</>
                   )}
                 </p>
               </div>
@@ -130,15 +145,15 @@ export function CreditOverview({
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-600">Credit packs</span>
-                <span className="text-sm font-medium">{successfulPayments.length}</span>
+                <span className="text-sm font-medium">{paymentStats.successfulPayments.length}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-600">Total credits</span>
-                <span className="text-sm font-medium">{totalCreditsPurchased}</span>
+                <span className="text-sm font-medium">{paymentStats.totalCreditsPurchased}</span>
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                {totalCreditsPurchased > 0 
-                  ? `${((totalCreditsUsed / totalCreditsPurchased) * 100).toFixed(0)}% utilized`
+                {paymentStats.totalCreditsPurchased > 0 
+                  ? `${((allTimeStats.totalCreditsUsed / paymentStats.totalCreditsPurchased) * 100).toFixed(0)}% utilized`
                   : 'No credits purchased yet'}
               </p>
             </div>
@@ -156,7 +171,7 @@ export function CreditOverview({
                   {transactionsLoading ? (
                     <span className="inline-block h-9 w-12 bg-slate-200 rounded animate-pulse" />
                   ) : (
-                    totalVideoUploads + totalBurnInJobs
+                    allTimeStats.totalVideoUploads + allTimeStats.totalBurnInJobs
                   )}
                 </p>
               </div>
@@ -164,11 +179,11 @@ export function CreditOverview({
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-600">Videos uploaded</span>
-                <span className="text-sm font-medium">{totalVideoUploads}</span>
+                <span className="text-sm font-medium">{allTimeStats.totalVideoUploads}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-600">Captions burned</span>
-                <span className="text-sm font-medium">{totalBurnInJobs}</span>
+                <span className="text-sm font-medium">{allTimeStats.totalBurnInJobs}</span>
               </div>
             </div>
           </div>

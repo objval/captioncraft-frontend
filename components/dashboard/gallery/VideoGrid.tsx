@@ -1,7 +1,7 @@
 import { VideoCard } from "@/components/video/video-card"
 import { Button } from "@/components/ui/button"
 import { Video, Plus } from "lucide-react"
-import type { Video as VideoType } from "@/lib/api"
+import type { Video as VideoType } from "@/lib/api/api"
 
 interface VideoGridProps {
   videos: VideoType[]

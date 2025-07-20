@@ -12,7 +12,7 @@ import {
   Type,
   Film,
 } from "lucide-react"
-import type { Video, TranscriptData } from "@/lib/api"
+import type { Video, TranscriptData } from "@/lib/api/api"
 import type { SaveStatus } from "@/lib/utils/types"
 import { SaveStatusIndicator } from "./SaveStatusIndicator"
 import { VideoSourceToggle } from "./VideoSourceToggle"

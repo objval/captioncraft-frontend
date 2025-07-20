@@ -1,5 +1,5 @@
-import { supabaseManager } from "@/lib/supabase-manager"
-import type { UserProfile } from "@/lib/api"
+import { supabaseManager } from "@/lib/database/supabase-manager"
+import type { UserProfile } from "@/lib/api/api"
 
 /**
  * Get current user's profile directly from Supabase

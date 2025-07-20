@@ -3,7 +3,8 @@ import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { BarChart3, CheckCircle, PlayCircle, Clock, AlertCircle, Video } from "lucide-react"
 import Link from "next/link"
-import type { Video as VideoType } from "@/lib/api"
+import { useMemo } from "react"
+import type { Video as VideoType } from "@/lib/api/api"
 
 interface VideoStatusOverviewProps {
   videos: VideoType[]
@@ -11,43 +12,68 @@ interface VideoStatusOverviewProps {
 
 export function VideoStatusOverview({ videos }: VideoStatusOverviewProps) {
   const totalVideos = videos.length
-  const completedVideos = videos.filter(v => v.status === "complete").length
-  const readyVideos = videos.filter(v => v.status === "ready").length
-  const processingVideos = videos.filter(v => 
-    v.status === "processing" || v.status === "uploading" || v.status === "burning_in"
-  ).length
-  const failedVideos = videos.filter(v => v.status === "failed").length
+  
+  // Memoize status calculations
+  const statusCounts = useMemo(() => {
+    const counts = {
+      completed: 0,
+      ready: 0,
+      processing: 0,
+      failed: 0
+    }
+    
+    videos.forEach(video => {
+      switch (video.status) {
+        case "complete":
+          counts.completed++
+          break
+        case "ready":
+          counts.ready++
+          break
+        case "processing":
+        case "uploading":
+        case "burning_in":
+          counts.processing++
+          break
+        case "failed":
+          counts.failed++
+          break
+      }
+    })
+    
+    return counts
+  }, [videos])
 
-  const statusData = [
+  const statusData = useMemo(() => [
     {
       label: "Completed",
-      count: completedVideos,
+      count: statusCounts.completed,
       icon: CheckCircle,
       color: "text-blue-500",
       progressClass: "from-blue-400 to-blue-600"
     },
     {
       label: "Ready",
-      count: readyVideos,
+      count: statusCounts.ready,
       icon: PlayCircle,
       color: "text-sky-500",
       progressClass: "from-sky-400 to-sky-600"
     },
     {
       label: "Processing",
-      count: processingVideos,
+      count: statusCounts.processing,
       icon: Clock,
       color: "text-amber-500",
       progressClass: "from-amber-400 to-amber-600"
     },
     {
       label: "Failed",
-      count: failedVideos,
+      count: statusCounts.failed,
       icon: AlertCircle,
       color: "text-red-500",
       progressClass: "from-red-400 to-red-600"
     }
-  ]
+  ], [statusCounts])
 
   return (
     <Card className="dashboard-card dashboard-card-dark lg:col-span-2">

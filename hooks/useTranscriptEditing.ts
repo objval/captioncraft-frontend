@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import type { TranscriptData } from '@/lib/api'
+import type { TranscriptData } from '@/lib/api/api'
 
 interface UseTranscriptEditingProps {
   transcriptData: TranscriptData | null

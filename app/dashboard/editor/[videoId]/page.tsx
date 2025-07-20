@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams } from "next/navigation"
-import { api, type Video, type TranscriptData, type TranscriptWord, type TranscriptSegment } from "@/lib/api"
-import { getUserVideo, updateVideoTranscript } from "@/lib/videos"
+import { api, type Video, type TranscriptData, type TranscriptWord, type TranscriptSegment } from "@/lib/api/api"
+import { getUserVideo, updateVideoTranscript } from "@/lib/media/videos"
 import { useDebounce } from "@/hooks/useDebounce"
 import { useVideoSubscription } from "@/hooks/useVideoSubscription"
 import { useTranscriptEditing } from "@/hooks/useTranscriptEditing"
