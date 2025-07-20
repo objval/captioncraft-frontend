@@ -32,7 +32,7 @@ export function SystemActivity({ recentVideos }: SystemActivityProps) {
           <Activity className="h-4 w-4 text-slate-500" />
           <div className="flex-1">
             <div className="font-medium text-sm">
-              {video.profiles?.email || 'User'} uploaded "{video.title}"
+              {video.profiles?.email || 'User'} uploaded &quot;{video.title}&quot;
             </div>
             <div className="text-xs text-slate-500">
               Status: {video.status} • <DateDisplay date={video.created_at} format="relative" />

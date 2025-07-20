@@ -35,7 +35,7 @@ export default function DashboardClient({
             Dashboard
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
-            Welcome back! Here's what's happening with your video projects.
+            Welcome back! Here&apos;s what&apos;s happening with your video projects.
           </p>
         </div>
 

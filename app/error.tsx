@@ -56,7 +56,7 @@ export default function Error({
               Oops! Something went wrong
             </h1>
             <p className="text-lg text-slate-600 mb-8 max-w-md mx-auto">
-              We encountered an unexpected error. Don't worry, our team has been notified and is working to fix this issue.
+              We encountered an unexpected error. Don&apos;t worry, our team has been notified and is working to fix this issue.
             </p>
           </div>
 

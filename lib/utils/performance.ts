@@ -59,6 +59,7 @@ export function useExpensiveMemo<T>(
     }
     
     return result
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }
 
@@ -196,8 +197,8 @@ export const BundleOptimizer = {
   ): Promise<T> {
     try {
       onLoading?.(true)
-      const module = await importFn()
-      return module.default
+      const importedModule = await importFn()
+      return importedModule.default
     } finally {
       onLoading?.(false)
     }

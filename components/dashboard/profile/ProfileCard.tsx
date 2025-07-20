@@ -47,15 +47,15 @@ export function ProfileCard({
   const joinDate = user?.created_at ? new Date(user.created_at) : new Date()
 
   return (
-    <Card className="lg:col-span-1 overflow-hidden border-0 shadow-lg">
-      <div className="h-24 bg-gradient-to-br from-blue-500 to-purple-600" />
+    <Card className="lg:col-span-1 overflow-hidden dashboard-card">
+      <div className="h-24 bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700" />
       <CardContent className="relative pt-0">
         <div className="flex flex-col items-center -mt-12 space-y-4">
           {loading ? (
-            <div className="h-24 w-24 rounded-full bg-slate-200 animate-pulse" />
+            <div className="h-24 w-24 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
           ) : (
-            <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-              <AvatarFallback className="text-2xl bg-white">
+            <Avatar className="h-24 w-24 border-4 border-white dark:border-slate-800 shadow-lg">
+              <AvatarFallback className="text-2xl bg-white dark:bg-slate-800 dark:text-slate-100">
                 {user?.email ? getUserInitials(user.email) : "U"}
               </AvatarFallback>
             </Avatar>
@@ -63,18 +63,18 @@ export function ProfileCard({
           
           {loading ? (
             <div className="space-y-2">
-              <div className="h-6 w-32 bg-slate-200 rounded mx-auto animate-pulse" />
-              <div className="h-4 w-48 bg-slate-200 rounded mx-auto animate-pulse" />
-              <div className="h-3 w-36 bg-slate-200 rounded mx-auto animate-pulse" />
+              <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded mx-auto animate-pulse" />
+              <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded mx-auto animate-pulse" />
+              <div className="h-3 w-36 bg-slate-200 dark:bg-slate-700 rounded mx-auto animate-pulse" />
             </div>
           ) : (
             <div className="text-center space-y-2">
               <h2 className="text-xl font-semibold">{getDisplayName()}</h2>
-              <p className="text-sm text-slate-600 flex items-center gap-1 justify-center">
+              <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1 justify-center">
                 <Mail className="h-3 w-3" />
                 {user?.email}
               </p>
-              <p className="text-xs text-slate-500 flex items-center gap-1 justify-center">
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 justify-center">
                 <Calendar className="h-3 w-3" />
                 Member since {formatDistanceToNow(joinDate, { addSuffix: false })}
               </p>
@@ -85,21 +85,21 @@ export function ProfileCard({
           {loading ? (
             <div className="w-full space-y-2">
               <div className="flex items-center justify-between">
-                <div className="h-4 w-24 bg-slate-200 rounded animate-pulse" />
-                <div className="h-4 w-12 bg-slate-200 rounded animate-pulse" />
+                <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                <div className="h-4 w-12 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
               </div>
-              <div className="h-2 w-full bg-slate-200 rounded animate-pulse" />
-              <div className="h-3 w-48 bg-slate-200 rounded mx-auto animate-pulse" />
+              <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+              <div className="h-3 w-48 bg-slate-200 dark:bg-slate-700 rounded mx-auto animate-pulse" />
             </div>
           ) : (
             <div className="w-full space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600">Profile Completion</span>
+                <span className="text-slate-600 dark:text-slate-400">Profile Completion</span>
                 <span className="font-medium">{profileCompletion}%</span>
               </div>
               <Progress value={profileCompletion} className="h-2" />
               {profileCompletion < 100 && (
-                <p className="text-xs text-center text-slate-500">
+                <p className="text-xs text-center text-slate-500 dark:text-slate-400">
                   Complete your profile to unlock all features
                 </p>
               )}
@@ -110,9 +110,9 @@ export function ProfileCard({
 
           {loading ? (
             <div className="w-full space-y-3">
-              <div className="h-4 w-full bg-slate-200 rounded animate-pulse" />
-              <div className="h-4 w-3/4 bg-slate-200 rounded animate-pulse" />
-              <div className="h-10 w-full bg-slate-200 rounded animate-pulse" />
+              <div className="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+              <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+              <div className="h-10 w-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
             </div>
           ) : isEditing ? (
             <div className="w-full space-y-4">
@@ -124,11 +124,11 @@ export function ProfileCard({
               <div className="space-y-3">
                 {profile?.phone_number ? (
                   <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-slate-500" />
+                    <Phone className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                     <span>{profile.phone_number}</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <div className="flex items-center gap-2 text-sm text-slate-400 dark:text-slate-500">
                     <Phone className="h-4 w-4" />
                     <span>No phone number</span>
                   </div>
@@ -136,7 +136,7 @@ export function ProfileCard({
                 
                 {profile?.street || profile?.city ? (
                   <div className="flex items-start gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-slate-500 mt-0.5" />
+                    <MapPin className="h-4 w-4 text-slate-500 dark:text-slate-400 mt-0.5" />
                     <div>
                       {profile?.street && <div>{profile.street}</div>}
                       {profile?.city && (
@@ -148,7 +148,7 @@ export function ProfileCard({
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <div className="flex items-center gap-2 text-sm text-slate-400 dark:text-slate-500">
                     <MapPin className="h-4 w-4" />
                     <span>No address</span>
                   </div>

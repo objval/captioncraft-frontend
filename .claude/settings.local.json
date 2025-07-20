@@ -29,7 +29,8 @@
       "WebFetch(domain:ui.shadcn.com)",
       "WebFetch(domain:react.dev)",
       "Bash(git checkout:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(bun lint:*)"
     ],
     "deny": []
   }

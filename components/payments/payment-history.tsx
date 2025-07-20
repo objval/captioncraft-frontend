@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/components/providers/auth-provider"
 import { getUserPayments } from "@/lib/services/payments"
 import { StatusBadge, StatusIcon } from "@/components/shared/StatusBadge"
@@ -65,11 +66,7 @@ export default function PaymentHistory() {
     loadPayments()
   }, [user?.id])
 
-  useEffect(() => {
-    applyFilters()
-  }, [searchTerm, filters, payments])
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...payments]
 
     // Search filter
@@ -138,7 +135,11 @@ export default function PaymentHistory() {
     }
 
     setFilteredPayments(filtered)
-  }
+  }, [payments, searchTerm, filters])
+
+  useEffect(() => {
+    applyFilters()
+  }, [applyFilters])
 
   // Status helpers are now imported from shared utilities
 

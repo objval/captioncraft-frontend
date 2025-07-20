@@ -30,7 +30,7 @@ export default function GlobalError({
                 Something went wrong!
               </h1>
               <p className="text-lg text-slate-600 mb-8 max-w-md mx-auto">
-                We're sorry, but something unexpected happened. Our team has been notified and is working to fix this issue.
+                We&apos;re sorry, but something unexpected happened. Our team has been notified and is working to fix this issue.
               </p>
             </div>
 

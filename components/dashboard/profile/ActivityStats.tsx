@@ -25,7 +25,7 @@ export function ActivityStats({
   ].filter(Boolean).length
 
   return (
-    <Card className="lg:col-span-2 border-0 shadow-lg">
+    <Card className="lg:col-span-2 dashboard-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5" />
@@ -38,45 +38,53 @@ export function ActivityStats({
       <CardContent className="space-y-6">
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-            <div className="text-2xl font-bold text-blue-700">
+          <div className="stats-card group">
+            <div className="p-4 text-center stats-card-content">
+              <div className="stats-number">
               {loading ? (
-                <span className="inline-block h-8 w-12 bg-blue-200 rounded animate-pulse" />
+                <span className="inline-block h-8 w-12 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
               ) : (
                 videos.length
               )}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">Videos</div>
             </div>
-            <div className="text-sm text-blue-600">Videos</div>
           </div>
-          <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
-            <div className="text-2xl font-bold text-purple-700">
+          <div className="stats-card group">
+            <div className="p-4 text-center stats-card-content">
+              <div className="stats-number">
               {loading ? (
-                <span className="inline-block h-8 w-12 bg-purple-200 rounded animate-pulse" />
+                <span className="inline-block h-8 w-12 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
               ) : (
                 credits
               )}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">Credits</div>
             </div>
-            <div className="text-sm text-purple-600">Credits</div>
           </div>
-          <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
-            <div className="text-2xl font-bold text-green-700">
+          <div className="stats-card group">
+            <div className="p-4 text-center stats-card-content">
+              <div className="stats-number">
               {loading ? (
-                <span className="inline-block h-8 w-12 bg-green-200 rounded animate-pulse" />
+                <span className="inline-block h-8 w-12 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
               ) : (
                 videos.filter(v => v.status === 'complete').length
               )}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">Completed</div>
             </div>
-            <div className="text-sm text-green-600">Completed</div>
           </div>
-          <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
-            <div className="text-2xl font-bold text-orange-700">
+          <div className="stats-card group">
+            <div className="p-4 text-center stats-card-content">
+              <div className="stats-number">
               {loading ? (
-                <span className="inline-block h-8 w-12 bg-orange-200 rounded animate-pulse" />
+                <span className="inline-block h-8 w-12 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
               ) : (
                 unlockedAchievements
               )}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">Achievements</div>
             </div>
-            <div className="text-sm text-orange-600">Achievements</div>
           </div>
         </div>
 

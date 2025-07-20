@@ -184,7 +184,7 @@ export default function EditorPage() {
       video.removeEventListener("play", handlePlay)
       video.removeEventListener("pause", handlePause)
     }
-  }, [transcriptData])
+  }, [transcriptData, setCurrentTime, setDuration, setIsPlaying])
 
   // Handle video source switching
   useEffect(() => {
@@ -220,7 +220,7 @@ export default function EditorPage() {
       // Force reload by setting currentTime to 0
       videoElement.currentTime = 0
     }
-  }, [showFinalVideo, video?.final_video_url, video?.original_video_url])
+  }, [showFinalVideo, video?.final_video_url, video?.original_video_url, video])
 
   // Auto-save with debouncing
   const debouncedSave = useDebounce(async (updatedTranscript: TranscriptData) => {

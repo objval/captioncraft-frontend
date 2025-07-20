@@ -52,15 +52,15 @@ export function AchievementsList({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 animate-pulse">
-            <div className="p-2 rounded-lg bg-slate-100">
-              <div className="h-5 w-5 bg-slate-200 rounded" />
+          <div key={i} className="dashboard-card flex items-center gap-3 p-3 animate-pulse">
+            <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+              <div className="h-5 w-5 bg-slate-200 dark:bg-slate-700 rounded" />
             </div>
             <div className="flex-1">
-              <div className="h-4 w-24 bg-slate-200 rounded mb-1" />
-              <div className="h-3 w-32 bg-slate-200 rounded" />
+              <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-1" />
+              <div className="h-3 w-32 bg-slate-200 dark:bg-slate-700 rounded" />
             </div>
-            <div className="h-4 w-4 bg-slate-200 rounded-full" />
+            <div className="h-4 w-4 bg-slate-200 dark:bg-slate-700 rounded-full" />
           </div>
         ))}
       </div>
@@ -75,17 +75,15 @@ export function AchievementsList({
           <div
             key={achievement.id}
             className={cn(
-              "flex items-center gap-3 p-3 rounded-lg border transition-colors",
-              achievement.unlocked
-                ? "bg-white border-slate-200"
-                : "bg-slate-50 border-slate-100 opacity-60"
+              "dashboard-card flex items-center gap-3 p-3",
+              !achievement.unlocked && "opacity-60"
             )}
           >
             <div className={cn(
               "p-2 rounded-lg",
               achievement.unlocked
-                ? "bg-slate-100"
-                : "bg-slate-50"
+                ? "bg-primary/10"
+                : "bg-muted/50"
             )}>
               <Icon className={cn(
                 "h-5 w-5",
@@ -101,7 +99,7 @@ export function AchievementsList({
               )}>
                 {achievement.name}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {achievement.description}
               </p>
             </div>

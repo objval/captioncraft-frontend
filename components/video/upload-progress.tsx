@@ -50,7 +50,7 @@ export function UploadProgress({ progress, status, fileName, fileSize, error }: 
 
       {/* Status Messages */}
       {status === "uploading" && (
-        <p className="text-xs text-muted-foreground">Please don't close this window while uploading...</p>
+        <p className="text-xs text-muted-foreground">Please don&apos;t close this window while uploading...</p>
       )}
 
       {status === "complete" && (

@@ -300,7 +300,7 @@ export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
                 <span className="text-sm">{uploadProgress}%</span>
               </div>
               <Progress value={uploadProgress} />
-              <p className="text-xs text-muted-foreground">Please don't close this window while uploading...</p>
+              <p className="text-xs text-muted-foreground">Please don&apos;t close this window while uploading...</p>
             </div>
           )}
 

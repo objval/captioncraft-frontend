@@ -17,7 +17,7 @@ export function SecuritySettings({
   onDeleteAccount
 }: SecuritySettingsProps) {
   return (
-    <Card className="border-0 shadow-lg">
+    <Card className="dashboard-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
@@ -71,7 +71,7 @@ export function SecuritySettings({
           <Separator />
 
           <div className="pt-2">
-            <p className="text-sm text-slate-600 mb-3">
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
               Danger Zone
             </p>
             <Button 

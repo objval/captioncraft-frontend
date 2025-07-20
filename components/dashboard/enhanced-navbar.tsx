@@ -127,7 +127,7 @@ export function EnhancedNavbar({
     }
 
     setNotifications(newNotifications)
-  }, [videos, credits])
+  }, [videos, credits, recentlyCompleted])
 
   // Update time every minute
   useEffect(() => {

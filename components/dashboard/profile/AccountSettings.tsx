@@ -21,7 +21,7 @@ export function AccountSettings({
   hasPhoneNumber
 }: AccountSettingsProps) {
   return (
-    <Card className="border-0 shadow-lg">
+    <Card className="dashboard-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings className="h-5 w-5" />
@@ -38,7 +38,7 @@ export function AccountSettings({
               <Label htmlFor="email-notifications" className="text-base font-normal">
                 Email Notifications
               </Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Receive updates about your videos via email
               </p>
             </div>
@@ -58,7 +58,7 @@ export function AccountSettings({
               <Label htmlFor="sms-notifications" className="text-base font-normal">
                 SMS Notifications
               </Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Get text alerts for important updates
               </p>
             </div>
@@ -79,7 +79,7 @@ export function AccountSettings({
               <Label htmlFor="auto-download" className="text-base font-normal">
                 Auto-download Videos
               </Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Automatically download processed videos
               </p>
             </div>
@@ -99,7 +99,7 @@ export function AccountSettings({
               <Label htmlFor="high-quality" className="text-base font-normal">
                 High Quality Export
               </Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Export videos in maximum quality
               </p>
             </div>
