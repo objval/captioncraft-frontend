@@ -8,7 +8,7 @@ import { getCreditPacks } from "@/lib/credit-packs"
 import { getUserPayments } from "@/lib/payments"
 import type { CreditPack, Payment } from "@/lib/api"
 import toast from "react-hot-toast"
-import { createPayment } from "@/app/actions/payments"
+import { initiateHypayPayment } from "@/app/actions/payments"
 
 // Import credit components
 import { CreditOverview } from "@/components/dashboard/credits/CreditOverview"

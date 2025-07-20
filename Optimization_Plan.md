@@ -30,14 +30,14 @@ This document outlines a comprehensive optimization strategy for the CaptionCraf
   - Created AccountSettings and SecuritySettings components
   - Improved code organization and maintainability
 
-### 🔄 In Progress (Phase 2.5 - 60%)
+### 🔄 In Progress (Phase 2.5 - 80%)
 - Need to refactor remaining dashboard pages:
   - ✅ Credits page (614 lines → 143 lines) - Extracted all components
-  - Main Dashboard (434 lines) - Extract stats and activity components
+  - ✅ Main Dashboard (434 lines → 53 lines) - Extracted all components
   - Gallery page (354 lines) - Extract filters and grid components
 
 ### 📌 Remaining Work
-- **Phase 2.5**: Dashboard pages refactoring (2 pages remaining)
+- **Phase 2.5**: Dashboard pages refactoring (1 page remaining - Gallery)
 - **Phase 3**: Performance optimizations (bundle, images, prefetching)
 - **Phase 4**: Polish (monitoring, error boundaries, TypeScript strict mode)
 
@@ -483,11 +483,12 @@ export default function GlobalError({
 - [x] Implement role-based access control (completed)
 
 ### Phase 2.5: Dashboard Pages Component Refactoring - IN PROGRESS
-- [ ] Main Dashboard page (434 lines):
-  - [ ] Extract DashboardStats component
-  - [ ] Extract VideoStatusOverview component
-  - [ ] Extract RecentActivity component
-  - [ ] Extract QuickActions component
+- [x] Main Dashboard page (434 lines → 53 lines):
+  - [x] Extract DashboardStats component
+  - [x] Extract VideoStatusOverview component
+  - [x] Extract RecentActivity component
+  - [x] Extract QuickActions component
+  - [x] Extract DashboardSkeleton component
 - [x] Credits page (614 lines → 143 lines):
   - [x] Extract CreditOverview component
     - [x] Changed from percentage-based to activity-based stats
@@ -556,9 +557,9 @@ export default function GlobalError({
   - [ ] Optimize based on findings
   - [ ] Set up performance budgets
 
-## Files Created/Modified in Phase 1
+## Files Created/Modified
 
-### New Files Created
+### Phase 1 - New Files Created
 - `lib/utils/status-helpers.tsx` - Centralized status utilities
 - `lib/utils/date-helpers.ts` - Date formatting utilities
 - `lib/utils/animations.ts` - Animation utilities for smooth transitions
@@ -574,6 +575,34 @@ export default function GlobalError({
 - `app/dashboard/credits/loading.tsx` - Credits page loading skeleton
 - `app/dashboard/profile/loading.tsx` - Profile page loading skeleton
 - `app/banned/page.tsx` - Banned user page
+
+### Phase 2.5 - New Component Files Created
+- `components/dashboard/main/` (5 components)
+  - `DashboardStats.tsx` - Stats cards for videos, processing, success rate, credits
+  - `VideoStatusOverview.tsx` - Visual breakdown of video statuses with progress bars
+  - `RecentActivity.tsx` - Latest video uploads with status badges
+  - `QuickActions.tsx` - Action cards for common tasks
+  - `DashboardSkeleton.tsx` - Loading state component
+- `components/dashboard/credits/` (6 components)
+  - `CreditOverview.tsx` - Credit balance and activity stats
+  - `CreditPacksGrid.tsx` - Available credit packages
+  - `TransactionHistory.tsx` - Recent credit usage
+  - `PaymentHistory.tsx` - Recent purchases
+  - `InvoiceTable.tsx` - Full purchase history
+  - `HelpSection.tsx` - Support information
+- `components/dashboard/profile/` (5 components)
+  - `ProfileCard.tsx` - User profile display
+  - `ProfileForm.tsx` - Profile edit form
+  - `ActivityStats.tsx` - Activity statistics
+  - `AccountSettings.tsx` - Account preferences
+  - `SecuritySettings.tsx` - Security options
+- `components/dashboard/admin/` (6 components)
+  - `SystemStats.tsx` - System overview cards
+  - `UserManagement.tsx` - User table with actions
+  - `RecentVideos.tsx` - Latest videos across system
+  - `SystemActivity.tsx` - System-wide activity
+  - `UserDialogs.tsx` - User action dialogs
+  - `AdminFilters.tsx` - Search and filter controls
 
 ### Files Modified
 - `app/page.tsx` - Converted to server component
