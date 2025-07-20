@@ -466,8 +466,8 @@ export default function GlobalError({
   - Created `AuthButtons` client components for interactivity
 
 ### Phase 2: Component Refactoring (Week 3-4) - IN PROGRESS
-- [ ] Break down large components:
-  - [ ] Editor page (1072 lines) → Multiple focused components
+- [x] Break down large components:
+  - [x] Editor page (1072 lines → 394 lines) - Refactored into multiple focused components
   - [x] Profile page - Completely redesigned with profile focus
   - [x] Credits page - Refactored with better UX and loading states
   - [x] Admin page - Enhanced with comprehensive user management
@@ -484,6 +484,41 @@ export default function GlobalError({
   - [ ] ErrorBoundary, DataTable components pending
 - [x] Implement proper loading states (completed)
 - [x] Implement role-based access control (completed)
+
+### Phase 2.5: Dashboard Pages Component Refactoring - NEW
+- [ ] Main Dashboard page (435 lines):
+  - [ ] Extract DashboardStats component
+  - [ ] Extract VideoStatusOverview component
+  - [ ] Extract RecentActivity component
+  - [ ] Extract QuickActions component
+  - [ ] Create DashboardSkeleton component
+- [ ] Credits page (615 lines):
+  - [ ] Extract CreditOverview component
+  - [ ] Extract CreditPacksGrid component
+  - [ ] Extract TransactionHistory component
+  - [ ] Extract PaymentHistory component
+  - [ ] Extract InvoiceTable component
+  - [ ] Extract CreditStats component
+- [ ] Gallery page (355 lines):
+  - [ ] Extract GalleryHeader component
+  - [ ] Extract GalleryFilters component
+  - [ ] Extract VideoGrid component
+  - [ ] Extract SelectionControls component
+  - [ ] Create GallerySkeleton component
+- [ ] Profile page (696 lines):
+  - [ ] Extract ProfileCard component
+  - [ ] Extract ProfileForm component
+  - [ ] Extract ActivityStats component
+  - [ ] Extract AccountSettings component
+  - [ ] Extract SecuritySettings component
+  - [ ] Extract AchievementsList component
+- [ ] Admin page (883 lines):
+  - [ ] Extract SystemStats component
+  - [ ] Extract UserManagement component
+  - [ ] Extract RecentVideos component
+  - [ ] Extract SystemActivity component
+  - [ ] Extract UserDialogs component
+  - [ ] Extract AdminFilters component
 
 ### Phase 3: Performance (Week 5-6) - PENDING
 - [ ] Optimize bundle with modular imports

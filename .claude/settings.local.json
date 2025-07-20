@@ -11,7 +11,8 @@
       "Bash(npm ls:*)",
       "mcp__supabase__apply_migration",
       "Bash(tail:*)",
-      "mcp__supabase__search_docs"
+      "mcp__supabase__search_docs",
+      "mcp__mcp-sequentialthinking-tools__sequentialthinking_tools"
     ],
     "deny": []
   }

@@ -1,45 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { Switch } from "@/components/ui/switch"
-import { EmptyState } from "@/components/shared/EmptyState"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useCreditBalance } from "@/hooks/use-credit-balance"
 import { useVideoSubscription } from "@/hooks/use-video-subscription"
 import { getUserProfile, updateUserProfile } from "@/lib/profiles"
 import { type UserProfile } from "@/lib/api"
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  Phone,
-  MapPin,
-  Settings,
-  Shield,
-  Bell,
-  Eye,
-  Download,
-  ChevronRight,
-  CheckCircle2,
-  AlertCircle,
-  Sparkles,
-  Trophy,
-  Target,
-  Activity,
-  Edit2,
-  Save,
-  X
-} from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
 import toast from "react-hot-toast"
-import { cn } from "@/lib/utils"
+
+// Import profile components
+import { ProfileCard } from "@/components/dashboard/profile/ProfileCard"
+import { ProfileForm } from "@/components/dashboard/profile/ProfileForm"
+import { ActivityStats } from "@/components/dashboard/profile/ActivityStats"
+import { AccountSettings } from "@/components/dashboard/profile/AccountSettings"
+import { SecuritySettings } from "@/components/dashboard/profile/SecuritySettings"
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -201,217 +175,24 @@ export default function ProfilePage() {
       {/* Profile Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
-        <Card className="lg:col-span-1 overflow-hidden border-0 shadow-lg">
-          <div className="h-24 bg-gradient-to-br from-blue-500 to-purple-600" />
-          <CardContent className="relative pt-0">
-            <div className="flex flex-col items-center -mt-12 space-y-4">
-              {profileLoading ? (
-                <div className="h-24 w-24 rounded-full bg-slate-200 animate-pulse" />
-              ) : (
-                <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-                  <AvatarFallback className="text-2xl bg-white">
-                    {user?.email ? getUserInitials(user.email) : "U"}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              
-              {profileLoading ? (
-                <div className="space-y-2">
-                  <div className="h-6 w-32 bg-slate-200 rounded mx-auto animate-pulse" />
-                  <div className="h-4 w-48 bg-slate-200 rounded mx-auto animate-pulse" />
-                  <div className="h-3 w-36 bg-slate-200 rounded mx-auto animate-pulse" />
-                </div>
-              ) : (
-                <div className="text-center space-y-2">
-                  <h2 className="text-xl font-semibold">{getDisplayName()}</h2>
-                  <p className="text-sm text-slate-600 flex items-center gap-1 justify-center">
-                    <Mail className="h-3 w-3" />
-                    {user?.email}
-                  </p>
-                  <p className="text-xs text-slate-500 flex items-center gap-1 justify-center">
-                    <Calendar className="h-3 w-3" />
-                    Member since {formatDistanceToNow(joinDate, { addSuffix: false })}
-                  </p>
-                </div>
-              )}
-
-              {/* Profile Completion */}
-              {profileLoading ? (
-                <div className="w-full space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="h-4 w-24 bg-slate-200 rounded animate-pulse" />
-                    <div className="h-4 w-12 bg-slate-200 rounded animate-pulse" />
-                  </div>
-                  <div className="h-2 w-full bg-slate-200 rounded animate-pulse" />
-                  <div className="h-3 w-48 bg-slate-200 rounded mx-auto animate-pulse" />
-                </div>
-              ) : (
-                <div className="w-full space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">Profile Completion</span>
-                    <span className="font-medium">{profileCompletion}%</span>
-                  </div>
-                  <Progress value={profileCompletion} className="h-2" />
-                  {profileCompletion < 100 && (
-                    <p className="text-xs text-center text-slate-500">
-                      Complete your profile to unlock all features
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <Separator className="w-full" />
-
-              {profileLoading ? (
-                <div className="w-full space-y-3">
-                  <div className="h-4 w-full bg-slate-200 rounded animate-pulse" />
-                  <div className="h-4 w-3/4 bg-slate-200 rounded animate-pulse" />
-                  <div className="h-10 w-full bg-slate-200 rounded animate-pulse" />
-                </div>
-              ) : isEditing ? (
-                <div className="w-full space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="first_name" className="text-xs">First Name</Label>
-                      <Input
-                        id="first_name"
-                        value={editData.first_name}
-                        onChange={(e) => handleInputChange("first_name", e.target.value)}
-                        placeholder="First name"
-                        className="h-9"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="last_name" className="text-xs">Last Name</Label>
-                      <Input
-                        id="last_name"
-                        value={editData.last_name}
-                        onChange={(e) => handleInputChange("last_name", e.target.value)}
-                        placeholder="Last name"
-                        className="h-9"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="phone_number" className="text-xs">Phone Number</Label>
-                    <Input
-                      id="phone_number"
-                      value={editData.phone_number}
-                      onChange={(e) => handleInputChange("phone_number", e.target.value)}
-                      placeholder="+972 50 123 4567"
-                      className="h-9"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="street" className="text-xs">Street Address</Label>
-                    <Input
-                      id="street"
-                      value={editData.street}
-                      onChange={(e) => handleInputChange("street", e.target.value)}
-                      placeholder="123 Main St"
-                      className="h-9"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="city" className="text-xs">City</Label>
-                      <Input
-                        id="city"
-                        value={editData.city}
-                        onChange={(e) => handleInputChange("city", e.target.value)}
-                        placeholder="Tel Aviv"
-                        className="h-9"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="zip_code" className="text-xs">Zip Code</Label>
-                      <Input
-                        id="zip_code"
-                        value={editData.zip_code}
-                        onChange={(e) => handleInputChange("zip_code", e.target.value)}
-                        placeholder="12345"
-                        className="h-9"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleSaveProfile} 
-                      disabled={saving}
-                      size="sm"
-                      className="flex-1"
-                    >
-                      {saving ? (
-                        "Saving..."
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-1" />
-                          Save
-                        </>
-                      )}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setIsEditing(false)} 
-                      disabled={saving}
-                      size="sm"
-                      className="flex-1"
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full space-y-4">
-                  {/* Contact Information */}
-                  <div className="space-y-3">
-                    {profile?.phone_number ? (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-4 w-4 text-slate-500" />
-                        <span>{profile.phone_number}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
-                        <Phone className="h-4 w-4" />
-                        <span>No phone number</span>
-                      </div>
-                    )}
-                    
-                    {profile?.street || profile?.city ? (
-                      <div className="flex items-start gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-slate-500 mt-0.5" />
-                        <div>
-                          {profile?.street && <div>{profile.street}</div>}
-                          {profile?.city && (
-                            <div>
-                              {profile.city}
-                              {profile?.zip_code && `, ${profile.zip_code}`}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
-                        <MapPin className="h-4 w-4" />
-                        <span>No address</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <Button onClick={() => setIsEditing(true)} className="w-full" size="sm">
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <ProfileCard
+          profile={profile}
+          user={user}
+          loading={profileLoading}
+          isEditing={isEditing}
+          profileCompletion={profileCompletion}
+          onEditClick={() => setIsEditing(true)}
+        >
+          {isEditing && (
+            <ProfileForm
+              formData={editData}
+              saving={saving}
+              onChange={handleInputChange}
+              onSave={handleSaveProfile}
+              onCancel={() => setIsEditing(false)}
+            />
+          )}
+        </ProfileCard>
 
         {/* Stats & Achievements */}
         <Card className="lg:col-span-2 border-0 shadow-lg">

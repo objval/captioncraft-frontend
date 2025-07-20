@@ -3,62 +3,29 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { StatusBadge, StatusIcon } from "@/components/shared/StatusBadge"
-import { DateDisplay } from "@/components/shared/DateDisplay"
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   Users, 
   Video, 
   Activity, 
-  TrendingUp, 
   AlertTriangle,
-  BarChart3,
-  ShieldAlert,
-  ShieldCheck,
-  Ban,
-  UserCheck,
-  Plus,
-  Minus,
-  MoreVertical,
-  Search,
-  Filter,
-  Download,
   RefreshCcw,
-  CreditCard,
-  Shield,
-  UserX,
-  Eye
 } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
 import { useAdminData } from "@/hooks/use-admin-data"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useAdmin } from "@/hooks/use-admin"
 import { createClient } from "@/utils/supabase/client"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
+
+// Import admin components
+import { SystemStats } from "@/components/dashboard/admin/SystemStats"
+import { AdminFilters } from "@/components/dashboard/admin/AdminFilters"
+import { UserManagement } from "@/components/dashboard/admin/UserManagement"
+import { UserDialogs } from "@/components/dashboard/admin/UserDialogs"
+import { RecentVideos } from "@/components/dashboard/admin/RecentVideos"
+import { SystemActivity } from "@/components/dashboard/admin/SystemActivity"
 
 interface AdminProfile {
   id: string
@@ -104,54 +71,16 @@ export default function AdminPage() {
     }
   }, [adminLoading, isAdmin, loading, user, router])
 
-  const handleAddCredits = async () => {
-    if (!selectedUser || !creditAmount) return
+  const handleCreditAdjustment = async (amount: number, isAddition: boolean) => {
+    if (!selectedUser || !amount) return
     
     setActionLoading(true)
     try {
       const supabase = createClient()
-      const amount = parseInt(creditAmount)
-      
-      // Update user credits
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ credits: selectedUser.credits + amount })
-        .eq("id", selectedUser.id)
-      
-      if (updateError) throw updateError
-      
-      // Add credit transaction
-      const { error: transactionError } = await supabase
-        .from("credit_transactions")
-        .insert({
-          user_id: selectedUser.id,
-          amount_changed: amount,
-          reason: `Admin credit adjustment by ${user?.email}`,
-          balance_after: selectedUser.credits + amount
-        })
-      
-      if (transactionError) throw transactionError
-      
-      toast.success(`Added ${amount} credits to ${selectedUser.email}`)
-      setCreditDialogOpen(false)
-      setCreditAmount("")
-      refetch()
-    } catch (error) {
-      console.error("Error adding credits:", error)
-      toast.error("Failed to add credits")
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleRemoveCredits = async () => {
-    if (!selectedUser || !creditAmount) return
-    
-    setActionLoading(true)
-    try {
-      const supabase = createClient()
-      const amount = parseInt(creditAmount)
-      const newBalance = Math.max(0, selectedUser.credits - amount)
+      const newBalance = isAddition 
+        ? selectedUser.credits + amount 
+        : Math.max(0, selectedUser.credits - amount)
+      const actualChange = newBalance - selectedUser.credits
       
       // Update user credits
       const { error: updateError } = await supabase
@@ -166,20 +95,22 @@ export default function AdminPage() {
         .from("credit_transactions")
         .insert({
           user_id: selectedUser.id,
-          amount_changed: -amount,
-          reason: `Admin credit removal by ${user?.email}`,
+          amount_changed: actualChange,
+          reason: `Admin credit ${isAddition ? 'addition' : 'removal'} by ${user?.email}`,
           balance_after: newBalance
         })
       
       if (transactionError) throw transactionError
       
-      toast.success(`Removed ${amount} credits from ${selectedUser.email}`)
+      const action = isAddition ? 'Added' : 'Removed'
+      const absAmount = Math.abs(actualChange)
+      toast.success(`${action} ${absAmount} credits ${isAddition ? 'to' : 'from'} ${selectedUser.email}`)
       setCreditDialogOpen(false)
       setCreditAmount("")
       refetch()
     } catch (error) {
-      console.error("Error removing credits:", error)
-      toast.error("Failed to remove credits")
+      console.error(`Error ${isAddition ? 'adding' : 'removing'} credits:`, error)
+      toast.error(`Failed to ${isAddition ? 'add' : 'remove'} credits`)
     } finally {
       setActionLoading(false)
     }
@@ -349,66 +280,12 @@ export default function AdminPage() {
       </div>
 
       {/* System Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{systemStats.total_users || 0}</div>
-            <p className="text-xs text-slate-600 mt-1">
-              {totalAdmins} admin{totalAdmins !== 1 ? 's' : ''}, {totalUsers} user{totalUsers !== 1 ? 's' : ''}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Banned Users</CardTitle>
-            <UserX className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{bannedUsers}</div>
-            <p className="text-xs text-slate-600 mt-1">
-              {bannedUsers > 0 ? `${((bannedUsers / systemStats.total_users) * 100).toFixed(1)}% of total` : 'None'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Videos</CardTitle>
-            <Video className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{systemStats.total_videos || 0}</div>
-            <p className="text-xs text-slate-600 mt-1">All time</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
-            <CreditCard className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{systemStats.credits_distributed || 0}</div>
-            <p className="text-xs text-slate-600 mt-1">In circulation</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Transcripts</CardTitle>
-            <BarChart3 className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{systemStats.total_transcripts || 0}</div>
-            <p className="text-xs text-slate-600 mt-1">Generated</p>
-          </CardContent>
-        </Card>
-      </div>
+      <SystemStats 
+        systemStats={systemStats}
+        totalAdmins={totalAdmins}
+        totalUsers={totalUsers}
+        bannedUsers={bannedUsers}
+      />
 
       <Tabs defaultValue="users" className="space-y-6">
         <div className="bg-white rounded-xl shadow-sm border-0 p-1.5 inline-flex gap-1">
@@ -438,7 +315,7 @@ export default function AdminPage() {
         </div>
 
         <TabsContent value="users">
-          <Card className="border-0 shadow-lg">
+          <Card className="dashboard-card dashboard-card-dark">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -454,190 +331,38 @@ export default function AdminPage() {
               </div>
               
               {/* Search and Filter */}
-              <div className="flex gap-4 mt-4">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    placeholder="Search users..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4 mr-2" />
-                      {filterRole === "all" ? "All Users" : filterRole === "admin" ? "Admins" : filterRole === "banned" ? "Banned" : "Users"}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setFilterRole("all")}>
-                      All Users
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterRole("admin")}>
-                      Admins Only
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterRole("user")}>
-                      Regular Users
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterRole("banned")}>
-                      Banned Users
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <AdminFilters
+                searchQuery={searchQuery}
+                filterRole={filterRole}
+                onSearchChange={setSearchQuery}
+                onFilterChange={setFilterRole}
+              />
             </CardHeader>
             <CardContent>
-              {filteredProfiles.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Credits</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredProfiles.map((profile) => (
-                      <TableRow key={profile.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={profile.avatar_url || undefined} />
-                              <AvatarFallback>
-                                {profile.email.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium">
-                                {profile.first_name && profile.last_name 
-                                  ? `${profile.first_name} ${profile.last_name}`
-                                  : profile.full_name || 'No name'}
-                              </div>
-                              <div className="text-xs text-slate-500">{profile.id}</div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{profile.email}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={profile.role === "admin" ? "default" : "secondary"}
-                            className={profile.role === "admin" ? "bg-purple-100 text-purple-700" : ""}
-                          >
-                            {profile.role === "admin" && <Shield className="h-3 w-3 mr-1" />}
-                            {profile.role || "user"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {profile.is_banned ? (
-                            <Badge variant="destructive">
-                              <Ban className="h-3 w-3 mr-1" />
-                              Banned
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-green-600 border-green-600">
-                              <UserCheck className="h-3 w-3 mr-1" />
-                              Active
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={profile.credits > 0 ? "default" : "destructive"}>
-                            {profile.credits} credits
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <DateDisplay date={profile.created_at} format="relative" />
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                onClick={() => {
-                                  setSelectedUser(profile)
-                                  setViewUserDialogOpen(true)
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => {
-                                  setSelectedUser(profile)
-                                  setCreditDialogOpen(true)
-                                }}
-                              >
-                                <CreditCard className="h-4 w-4 mr-2" />
-                                Manage Credits
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleToggleAdmin(profile.id, profile.role)}
-                                disabled={profile.id === user?.id}
-                              >
-                                {profile.role === "admin" ? (
-                                  <>
-                                    <UserCheck className="h-4 w-4 mr-2" />
-                                    Remove Admin
-                                  </>
-                                ) : (
-                                  <>
-                                    <ShieldCheck className="h-4 w-4 mr-2" />
-                                    Make Admin
-                                  </>
-                                )}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              {profile.is_banned ? (
-                                <DropdownMenuItem 
-                                  onClick={() => handleUnbanUser(profile.id)}
-                                  className="text-green-600"
-                                >
-                                  <UserCheck className="h-4 w-4 mr-2" />
-                                  Unban User
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem 
-                                  onClick={() => {
-                                    setSelectedUser(profile)
-                                    setBanDialogOpen(true)
-                                  }}
-                                  className="text-red-600"
-                                  disabled={profile.id === user?.id || profile.role === "admin"}
-                                >
-                                  <Ban className="h-4 w-4 mr-2" />
-                                  Ban User
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-8 text-slate-500">
-                  No users found matching your criteria
-                </div>
-              )}
+              <UserManagement
+                profiles={filteredProfiles}
+                currentUserId={user?.id}
+                onViewUser={(profile) => {
+                  setSelectedUser(profile)
+                  setViewUserDialogOpen(true)
+                }}
+                onManageCredits={(profile) => {
+                  setSelectedUser(profile)
+                  setCreditDialogOpen(true)
+                }}
+                onToggleAdmin={handleToggleAdmin}
+                onBanUser={(profile) => {
+                  setSelectedUser(profile)
+                  setBanDialogOpen(true)
+                }}
+                onUnbanUser={handleUnbanUser}
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="videos">
-          <Card className="border-0 shadow-lg">
+          <Card className="dashboard-card dashboard-card-dark">
             <CardHeader>
               <CardTitle>Recent Videos</CardTitle>
               <CardDescription>
@@ -645,238 +370,50 @@ export default function AdminPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {recentVideos.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Uploaded</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentVideos.map((video: any) => (
-                      <TableRow key={video.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{video.title}</div>
-                            <div className="text-xs text-slate-500">{video.id}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{video.profiles?.full_name || video.profiles?.email || 'Unknown'}</div>
-                            <div className="text-xs text-slate-500">{video.profiles?.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell><StatusBadge status={video.status} /></TableCell>
-                        <TableCell>
-                          <DateDisplay date={video.created_at} format="relative" />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-8 text-slate-500">
-                  No videos found
-                </div>
-              )}
+              <RecentVideos videos={recentVideos} />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="activity">
-          <Card className="border-0 shadow-lg">
+          <Card className="dashboard-card dashboard-card-dark">
             <CardHeader>
               <CardTitle>System Activity</CardTitle>
               <CardDescription>Recent actions and system events</CardDescription>
             </CardHeader>
             <CardContent>
-              {recentVideos.length > 0 ? (
-                <div className="space-y-4">
-                  {recentVideos.slice(0, 20).map((video: any) => (
-                    <div key={video.id} className="flex items-center gap-4 p-3 rounded-lg bg-slate-50">
-                      <Activity className="h-4 w-4 text-slate-500" />
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">
-                          {video.profiles?.email || 'User'} uploaded "{video.title}"
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          Status: {video.status} • <DateDisplay date={video.created_at} format="relative" />
-                        </div>
-                      </div>
-                      <StatusIcon status={video.status} />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-slate-500">
-                  No recent activity
-                </div>
-              )}
+              <SystemActivity recentVideos={recentVideos} />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Credit Management Dialog */}
-      <Dialog open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Manage Credits</DialogTitle>
-            <DialogDescription>
-              Adjust credit balance for {selectedUser?.email}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Current Balance</Label>
-              <p className="text-2xl font-bold">{selectedUser?.credits || 0} credits</p>
-            </div>
-            <div>
-              <Label htmlFor="creditAmount">Amount</Label>
-              <Input
-                id="creditAmount"
-                type="number"
-                placeholder="Enter amount"
-                value={creditAmount}
-                onChange={(e) => setCreditAmount(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleRemoveCredits}
-              disabled={actionLoading || !creditAmount || parseInt(creditAmount) <= 0}
-            >
-              <Minus className="h-4 w-4 mr-2" />
-              Remove Credits
-            </Button>
-            <Button
-              onClick={handleAddCredits}
-              disabled={actionLoading || !creditAmount || parseInt(creditAmount) <= 0}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Credits
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Ban User Dialog */}
-      <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ban User</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to ban {selectedUser?.email}? They will lose access to the platform.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="banReason">Reason (optional)</Label>
-              <Input
-                id="banReason"
-                placeholder="Enter reason for ban"
-                value={banReason}
-                onChange={(e) => setBanReason(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBanDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleBanUser}
-              disabled={actionLoading}
-            >
-              <Ban className="h-4 w-4 mr-2" />
-              Ban User
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* View User Details Dialog */}
-      <Dialog open={viewUserDialogOpen} onOpenChange={setViewUserDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-            <DialogDescription>
-              Complete information for {selectedUser?.email}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs text-slate-500">User ID</Label>
-                  <p className="font-mono text-sm">{selectedUser.id}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-slate-500">Email</Label>
-                  <p className="font-medium">{selectedUser.email}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-slate-500">Name</Label>
-                  <p className="font-medium">
-                    {selectedUser.first_name && selectedUser.last_name 
-                      ? `${selectedUser.first_name} ${selectedUser.last_name}`
-                      : selectedUser.full_name || 'Not provided'}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-xs text-slate-500">Role</Label>
-                  <Badge className={selectedUser.role === "admin" ? "bg-purple-100 text-purple-700" : ""}>
-                    {selectedUser.role === "admin" && <Shield className="h-3 w-3 mr-1 inline" />}
-                    {selectedUser.role || "user"}
-                  </Badge>
-                </div>
-                <div>
-                  <Label className="text-xs text-slate-500">Credits</Label>
-                  <p className="font-medium">{selectedUser.credits}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-slate-500">Status</Label>
-                  {selectedUser.is_banned ? (
-                    <Badge variant="destructive">Banned</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-green-600 border-green-600">Active</Badge>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-xs text-slate-500">Joined</Label>
-                  <div className="font-medium">
-                    <DateDisplay date={selectedUser.created_at} format="smart" />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs text-slate-500">Last Updated</Label>
-                  <div className="font-medium">
-                    <DateDisplay date={selectedUser.updated_at} format="smart" />
-                  </div>
-                </div>
-              </div>
-              {selectedUser.is_banned && selectedUser.banned_reason && (
-                <div>
-                  <Label className="text-xs text-slate-500">Ban Reason</Label>
-                  <p className="text-sm">{selectedUser.banned_reason}</p>
-                  {selectedUser.banned_at && (
-                    <p className="text-xs text-slate-500 mt-1">
-                      Banned <DateDisplay date={selectedUser.banned_at} format="relative" />
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* User Dialogs */}
+      <UserDialogs
+        selectedUser={selectedUser}
+        creditDialogOpen={creditDialogOpen}
+        banDialogOpen={banDialogOpen}
+        viewUserDialogOpen={viewUserDialogOpen}
+        onCreditDialogChange={setCreditDialogOpen}
+        onBanDialogChange={setBanDialogOpen}
+        onViewUserDialogChange={setViewUserDialogOpen}
+        onAddCredits={async (amount) => {
+          if (!selectedUser || !amount) return
+          const parsedAmount = parseInt(amount)
+          await handleCreditAdjustment(parsedAmount, true)
+        }}
+        onRemoveCredits={async (amount) => {
+          if (!selectedUser || !amount) return
+          const parsedAmount = parseInt(amount)
+          await handleCreditAdjustment(parsedAmount, false)
+        }}
+        onBanUser={async (reason) => {
+          if (!selectedUser) return
+          setBanReason(reason)
+          await handleBanUser()
+        }}
+        actionLoading={actionLoading}
+      />
       </div>
     </div>
   )
