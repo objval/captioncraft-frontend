@@ -13,12 +13,12 @@ import {
   Film,
 } from "lucide-react"
 import type { Video, TranscriptData } from "@/lib/api"
-import type { SaveStatus } from "../utils/types"
+import type { SaveStatus } from "@/lib/utils/types"
 import { SaveStatusIndicator } from "./SaveStatusIndicator"
 import { VideoSourceToggle } from "./VideoSourceToggle"
-import { downloadVideo } from "../utils/video-download"
-import { formatTime } from "../utils/time-formatters"
-import { isRTLLanguage } from "../utils/rtl-helpers"
+import { downloadVideo } from "@/lib/utils/video-download"
+import { formatTime } from "@/lib/utils/time-formatters"
+import { isRTLLanguage } from "@/lib/utils/rtl-helpers"
 
 interface EditorHeaderProps {
   video: Video

@@ -3,8 +3,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Edit3 } from "lucide-react"
 import type { TranscriptSegment } from "@/lib/api"
-import { formatTimeDetailed } from "../../utils/time-formatters"
-import { getTextDirection, isRTLLanguage } from "../../utils/rtl-helpers"
+import { formatTimeDetailed } from "@/lib/utils/time-formatters"
+import { getTextDirection, isRTLLanguage } from "@/lib/utils/rtl-helpers"
 import { SegmentEditForm } from "./SegmentEditForm"
 
 interface SegmentsListProps {

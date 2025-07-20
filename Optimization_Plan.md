@@ -30,14 +30,14 @@ This document outlines a comprehensive optimization strategy for the CaptionCraf
   - Created AccountSettings and SecuritySettings components
   - Improved code organization and maintainability
 
-### 🔄 In Progress (Phase 2.5 - 80%)
-- Need to refactor remaining dashboard pages:
+### ✅ Completed (Phase 2.5 - 100%)
+- All dashboard pages have been refactored:
   - ✅ Credits page (614 lines → 143 lines) - Extracted all components
   - ✅ Main Dashboard (434 lines → 53 lines) - Extracted all components
-  - Gallery page (354 lines) - Extract filters and grid components
+  - ✅ Gallery page (354 lines → 137 lines) - Extracted all components
+  - ✅ Component file reorganization - All components now follow consistent structure
 
 ### 📌 Remaining Work
-- **Phase 2.5**: Dashboard pages refactoring (1 page remaining - Gallery)
 - **Phase 3**: Performance optimizations (bundle, images, prefetching)
 - **Phase 4**: Polish (monitoring, error boundaries, TypeScript strict mode)
 
@@ -482,7 +482,7 @@ export default function GlobalError({
 - [x] Implement proper loading states (completed)
 - [x] Implement role-based access control (completed)
 
-### Phase 2.5: Dashboard Pages Component Refactoring - IN PROGRESS
+### Phase 2.5: Dashboard Pages Component Refactoring - COMPLETED ✅
 - [x] Main Dashboard page (434 lines → 53 lines):
   - [x] Extract DashboardStats component
   - [x] Extract VideoStatusOverview component
@@ -502,11 +502,11 @@ export default function GlobalError({
   - [x] Extract PaymentHistory component
   - [x] Extract InvoiceTable component
   - [x] Extract HelpSection component
-- [ ] Gallery page (354 lines):
-  - [ ] Extract GalleryHeader component
-  - [ ] Extract GalleryFilters component
-  - [ ] Extract VideoGrid component
-  - [ ] Extract SelectionControls component
+- [x] Gallery page (354 lines → 137 lines):
+  - [x] Extract GalleryHeader component
+  - [x] Extract GalleryFilters component
+  - [x] Extract VideoGrid component
+  - [x] Extract GallerySkeleton component
 - [x] Profile page (696 lines → 476 lines):
   - [x] Extract ProfileCard component
   - [x] Extract ProfileForm component
@@ -603,6 +603,20 @@ export default function GlobalError({
   - `SystemActivity.tsx` - System-wide activity
   - `UserDialogs.tsx` - User action dialogs
   - `AdminFilters.tsx` - Search and filter controls
+- `components/dashboard/gallery/` (4 components)
+  - `GalleryHeader.tsx` - Header with selection controls and view mode toggle
+  - `GalleryFilters.tsx` - Search bar and status filter pills
+  - `VideoGrid.tsx` - Grid/list view of videos with empty state
+  - `GallerySkeleton.tsx` - Loading state component
+- `components/dashboard/editor/` (Moved from app folder)
+  - `EditorHeader.tsx` - Editor page header with actions
+  - `ErrorState.tsx` - Error display component
+  - `KeyboardShortcuts.tsx` - Keyboard shortcuts helper
+  - `LoadingState.tsx` - Loading display component
+  - `SaveStatusIndicator.tsx` - Save status display
+  - `VideoSourceToggle.tsx` - Toggle between original/final video
+  - `TranscriptEditor/` - Transcript editing components
+  - `VideoPlayer/` - Video player components
 
 ### Files Modified
 - `app/page.tsx` - Converted to server component

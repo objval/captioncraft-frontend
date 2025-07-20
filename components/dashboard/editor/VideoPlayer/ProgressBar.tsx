@@ -1,5 +1,5 @@
 import { Slider } from "@/components/ui/slider"
-import { formatTime } from "../../utils/time-formatters"
+import { formatTime } from "@/lib/utils/time-formatters"
 
 interface ProgressBarProps {
   currentTime: number

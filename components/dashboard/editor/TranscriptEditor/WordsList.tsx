@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { TranscriptWord } from "@/lib/api"
-import { getTextDirection, isRTLLanguage } from "../../utils/rtl-helpers"
+import { getTextDirection, isRTLLanguage } from "@/lib/utils/rtl-helpers"
 import { WordEditForm } from "./WordEditForm"
 
 interface WordsListProps {

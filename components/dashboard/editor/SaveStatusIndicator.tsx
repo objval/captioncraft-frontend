@@ -1,5 +1,5 @@
 import { CheckCircle, Clock, Edit3, AlertCircle } from "lucide-react"
-import type { SaveStatus } from "../utils/types"
+import type { SaveStatus } from "../../../../app/dashboard/editor/[videoId]/utils/types"
 
 interface SaveStatusIndicatorProps {
   status: SaveStatus
