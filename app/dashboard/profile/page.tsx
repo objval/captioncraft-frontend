@@ -186,11 +186,12 @@ export default function ProfilePage() {
   const unlockedAchievements = achievements.filter(a => a.unlocked).length
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-          Profile
+    <div className="min-h-screen p-4 lg:p-8">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+            Profile
         </h1>
         <p className="text-slate-600">
           Manage your account information and preferences
@@ -688,6 +689,7 @@ export default function ProfilePage() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   )

@@ -121,11 +121,12 @@ export default function CreditsPage() {
   const isLowCredits = credits < 10
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-          Billing & Credits
+    <div className="min-h-screen p-4 lg:p-8">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+            Billing & Credits
         </h1>
         <p className="text-slate-600 mt-1">
           Manage your credits and view your billing history
@@ -608,6 +609,7 @@ export default function CreditsPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

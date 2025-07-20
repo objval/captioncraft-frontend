@@ -267,10 +267,11 @@ export default function AdminPage() {
   // Show loading state while checking admin status or loading data
   if (adminLoading || loading) {
     return (
-      <div className="space-y-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-            Admin Dashboard
+      <div className="min-h-screen p-4 lg:p-8">
+        <div className="space-y-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+              Admin Dashboard
           </h1>
           <p className="text-slate-600">System overview and user management</p>
         </div>
@@ -299,11 +300,12 @@ export default function AdminPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+      <div className="min-h-screen p-4 lg:p-8">
+        <div className="space-y-6">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         <Button onClick={refetch} variant="outline">
           <RefreshCcw className="h-4 w-4 mr-2" />
           Retry Loading
@@ -335,10 +337,11 @@ export default function AdminPage() {
   const totalUsers = (profiles as AdminProfile[]).filter(p => p.role !== "admin").length
 
   return (
-    <div className="space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-          Admin Dashboard
+    <div className="min-h-screen p-4 lg:p-8">
+      <div className="space-y-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+            Admin Dashboard
         </h1>
         <p className="text-slate-600">System overview and user management</p>
       </div>
@@ -872,6 +875,7 @@ export default function AdminPage() {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   )
 }

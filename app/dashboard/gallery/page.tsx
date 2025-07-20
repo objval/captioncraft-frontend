@@ -94,8 +94,9 @@ export default function GalleryPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6 md:space-y-8">
-        {/* Header Skeleton */}
+      <div className="min-h-screen p-4 lg:p-8">
+        <div className="space-y-6 md:space-y-8">
+          {/* Header Skeleton */}
         <div className="space-y-4">
           <div className="space-y-3">
             <div className="h-8 bg-gradient-to-r from-slate-200 to-slate-300 rounded-lg w-48 shimmer"></div>
@@ -134,13 +135,15 @@ export default function GalleryPage() {
             </div>
           ))}
         </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 md:space-y-8">
-      {/* Professional Header */}
+    <div className="min-h-screen p-4 lg:p-8">
+      <div className="space-y-6 md:space-y-8">
+        {/* Professional Header */}
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-2">
@@ -346,6 +349,7 @@ export default function GalleryPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   )
 } 
