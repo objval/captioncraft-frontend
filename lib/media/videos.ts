@@ -111,7 +111,7 @@ export async function getUserVideo(videoId: string): Promise<Video> {
 }
 
 /**
- * Update video transcript data
+ * Update video transcript data directly in Supabase
  */
 export async function updateVideoTranscript(
   videoId: string, 
@@ -239,21 +239,78 @@ export function subscribeToUserVideos(
 ) {
   const supabase = createClient()
   
-  const channel = supabase
-    .channel(`videos:user_id=eq.${userId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "videos",
-        filter: `user_id=eq.${userId}`,
-      },
-      onUpdate
-    )
-    .subscribe()
+  try {
+    const channel = supabase
+      .channel(`user-videos-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "videos",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          try {
+            onUpdate({ ...payload, eventType: "INSERT" })
+          } catch (error) {
+            console.error("Error in onUpdate callback:", error)
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "videos",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          try {
+            onUpdate({ ...payload, eventType: "UPDATE" })
+          } catch (error) {
+            console.error("Error in onUpdate callback:", error)
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "videos",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          try {
+            onUpdate({ ...payload, eventType: "DELETE" })
+          } catch (error) {
+            console.error("Error in onUpdate callback:", error)
+          }
+        }
+      )
+      .subscribe((status, error) => {
+        if (status === "SUBSCRIBED") {
+          console.log("Subscribed to video updates")
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("Subscription error:", error)
+        } else if (status === "TIMED_OUT") {
+          console.error("Subscription timed out")
+        } else if (status === "CLOSED") {
+          console.log("Subscription closed")
+        }
+      })
 
-  return () => {
-    supabase.removeChannel(channel)
+    return () => {
+      try {
+        supabase.removeChannel(channel)
+      } catch (error) {
+        console.error("Error removing channel:", error)
+      }
+    }
+  } catch (error) {
+    console.error("Failed to create subscription:", error)
+    return () => {} // Return empty cleanup function
   }
 }

@@ -44,7 +44,7 @@ export function GalleryHeader({
                 variant="outline"
                 size="sm"
                 onClick={onSelectAll}
-                className="bg-white/80 border-slate-300 hover:bg-slate-50"
+                className="bg-card/80 dark:bg-card/60 border-border hover:bg-card/90 dark:hover:bg-card/70 backdrop-blur-sm"
               >
                 {allSelected ? (
                   <CheckSquare className="h-4 w-4 mr-2 text-blue-600" />
@@ -73,18 +73,18 @@ export function GalleryHeader({
             variant={isSelectionMode ? "default" : "outline"}
             size="sm"
             onClick={onToggleSelectionMode}
-            className={isSelectionMode ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg" : "bg-white/80 border-slate-300 hover:bg-slate-50"}
+            className={isSelectionMode ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg" : "bg-card/80 dark:bg-card/60 border-border hover:bg-card/90 dark:hover:bg-card/70 backdrop-blur-sm"}
           >
             {isSelectionMode ? "Cancel" : "Select"}
           </Button>
           
           {/* View Mode Buttons */}
-          <div className="flex bg-white/60 rounded-lg p-1 border border-slate-200">
+          <div className="flex bg-card/60 dark:bg-card/40 rounded-lg p-1 border border-border backdrop-blur-sm">
             <Button
               variant={viewMode === "grid" ? "default" : "ghost"}
               size="sm"
               onClick={() => onViewModeChange("grid")}
-              className={viewMode === "grid" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-sm" : "hover:bg-white/80"}
+              className={viewMode === "grid" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-sm" : "hover:bg-card/80 dark:hover:bg-card/60"}
             >
               <Grid3X3 className="h-4 w-4" />
             </Button>
@@ -92,7 +92,7 @@ export function GalleryHeader({
               variant={viewMode === "list" ? "default" : "ghost"}
               size="sm"
               onClick={() => onViewModeChange("list")}
-              className={viewMode === "list" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-sm" : "hover:bg-white/80"}
+              className={viewMode === "list" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-sm" : "hover:bg-card/80 dark:hover:bg-card/60"}
             >
               <List className="h-4 w-4" />
             </Button>

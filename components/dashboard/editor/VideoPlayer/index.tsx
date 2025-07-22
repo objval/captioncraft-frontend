@@ -42,9 +42,9 @@ export function VideoPlayer({
   onVideoVolumeChange,
 }: VideoPlayerProps) {
   return (
-    <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+    <Card className="shadow-lg border-0 bg-card/80 dark:bg-card/60 backdrop-blur-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
+        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
           <Film className="h-4 w-4" />
           Video Player
         </CardTitle>

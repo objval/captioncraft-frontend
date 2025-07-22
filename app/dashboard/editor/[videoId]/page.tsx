@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams } from "next/navigation"
 import { api, type Video, type TranscriptData, type TranscriptWord, type TranscriptSegment } from "@/lib/api/api"
-import { getUserVideo, updateVideoTranscript } from "@/lib/media/videos"
+import { getUserVideo } from "@/lib/media/videos"
 import { useDebounce } from "@/hooks/utils"
 import { useSingleVideoSubscription, useTranscriptEditing, useVideoControls } from "@/hooks/video"
 import type { SaveStatus, EditMode } from "@/lib/utils/types"
@@ -228,7 +228,7 @@ export default function EditorPage() {
 
     setSaveStatus("saving")
     try {
-      await updateVideoTranscript(video.id, updatedTranscript)
+      await api.updateVideoTranscript(video.id, updatedTranscript)
       setSaveStatus("saved")
       toast.success("Changes saved")
     } catch (error) {
@@ -325,7 +325,7 @@ export default function EditorPage() {
   if (!video || !transcriptData) return <ErrorState />
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-background">
       <div className="w-full max-w-none px-4 md:px-6 lg:px-8 py-4 space-y-4">
         {/* Enhanced Header */}
         <EditorHeader
@@ -390,6 +390,7 @@ export default function EditorPage() {
         {/* Keyboard Shortcuts Help - Hidden on Mobile */}
         <KeyboardShortcuts />
       </div>
+
     </div>
   )
 }

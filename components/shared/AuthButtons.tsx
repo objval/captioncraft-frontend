@@ -20,7 +20,7 @@ export function AuthButtons({ user }: AuthButtonsProps) {
       ) : (
         <>
           <Link href="/auth/login">
-            <Button variant="ghost" className="text-slate-600 hover:text-slate-800 hover:bg-slate-100">
+            <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-accent">
               Sign In
             </Button>
           </Link>
@@ -51,7 +51,7 @@ export function HeroAuthButtons({ user }: AuthButtonsProps) {
           </Button>
         </Link>
       )}
-      <Button size="lg" variant="outline" className="w-full sm:w-auto bg-white/80 border-slate-300 hover:bg-white hover:border-slate-400 text-lg px-8 py-6">
+      <Button size="lg" variant="outline" className="w-full sm:w-auto bg-card/80 border-border hover:bg-card hover:border-border text-lg px-8 py-6">
         <Play className="h-5 w-5 mr-2" />
         Watch Demo
       </Button>
@@ -66,13 +66,13 @@ export function CTAAuthButtons({ user }: AuthButtonsProps) {
     <div className="flex flex-col sm:flex-row gap-4 justify-center">
       {user ? (
         <Link href="/dashboard">
-          <Button size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 shadow-lg text-lg px-8 py-6">
+          <Button size="lg" className="w-full sm:w-auto bg-background text-primary hover:bg-primary/10 shadow-lg text-lg px-8 py-6">
             Go to Dashboard
           </Button>
         </Link>
       ) : (
         <Link href="/auth/signup">
-          <Button size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 shadow-lg text-lg px-8 py-6">
+          <Button size="lg" className="w-full sm:w-auto bg-background text-primary hover:bg-primary/10 shadow-lg text-lg px-8 py-6">
             Start Free Trial
           </Button>
         </Link>

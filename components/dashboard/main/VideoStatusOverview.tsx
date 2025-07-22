@@ -8,9 +8,10 @@ import type { Video as VideoType } from "@/lib/api/api"
 
 interface VideoStatusOverviewProps {
   videos: VideoType[]
+  loading?: boolean
 }
 
-export function VideoStatusOverview({ videos }: VideoStatusOverviewProps) {
+export function VideoStatusOverview({ videos, loading }: VideoStatusOverviewProps) {
   const totalVideos = videos.length
   
   // Memoize status calculations
@@ -89,6 +90,26 @@ export function VideoStatusOverview({ videos }: VideoStatusOverviewProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {loading ? (
+          // Loading skeleton
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 animate-pulse" />
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-6 animate-pulse" />
+                  </div>
+                  <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full w-full animate-pulse" />
+                </div>
+              ))}
+            </div>
+            <div className="pt-6 border-t border-border">
+              <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-lg w-full animate-pulse" />
+            </div>
+          </>
+        ) : (
+          <>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {statusData.map(({ label, count, icon: Icon, color, progressClass }) => (
             <div key={label} className="space-y-3">
@@ -118,6 +139,8 @@ export function VideoStatusOverview({ videos }: VideoStatusOverviewProps) {
             </Link>
           </Button>
         </div>
+          </>
+        )}
       </CardContent>
     </Card>
   )

@@ -36,43 +36,43 @@ const statusConfig: Record<
     label: "Uploading",
     color: "secondary",
     icon: <Loader2 className="h-3 w-3 animate-spin" />,
-    className: "bg-slate-100 text-slate-800 border-slate-200",
-    bgGradient: "from-slate-100 to-slate-200"
+    className: "bg-muted text-muted-foreground border-border",
+    bgGradient: "from-muted to-muted/80"
   },
   processing: {
     label: "Processing",
     color: "secondary",
     icon: <Loader2 className="h-3 w-3 animate-spin" />,
-    className: "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 border-indigo-200",
-    bgGradient: "from-indigo-100 to-purple-200"
+    className: "bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    bgGradient: "from-indigo-500/10 to-purple-500/10"
   },
   ready: {
     label: "Ready",
     color: "default",
     icon: <CheckCircle className="h-3 w-3" />,
-    className: "bg-gradient-to-r from-sky-100 to-blue-100 text-sky-800 border-sky-200",
-    bgGradient: "from-sky-100 to-blue-200"
+    className: "bg-gradient-to-r from-sky-500/10 to-blue-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+    bgGradient: "from-sky-500/10 to-blue-500/10"
   },
   burning_in: {
     label: "Burning Captions",
     color: "secondary",
     icon: <Loader2 className="h-3 w-3 animate-spin" />,
-    className: "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-200",
-    bgGradient: "from-blue-100 to-indigo-200"
+    className: "bg-gradient-to-r from-blue-500/10 to-indigo-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    bgGradient: "from-blue-500/10 to-indigo-500/10"
   },
   complete: {
     label: "Complete",
     color: "default",
     icon: <CheckCircle className="h-3 w-3" />,
-    className: "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-emerald-200",
-    bgGradient: "from-emerald-100 to-green-200"
+    className: "bg-gradient-to-r from-emerald-500/10 to-green-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    bgGradient: "from-emerald-500/10 to-green-500/10"
   },
   failed: {
     label: "Failed",
     color: "destructive",
     icon: <AlertCircle className="h-3 w-3" />,
-    className: "bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border-red-200",
-    bgGradient: "from-red-100 to-rose-200"
+    className: "bg-gradient-to-r from-red-500/10 to-rose-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+    bgGradient: "from-red-500/10 to-rose-500/10"
   },
 }
 
@@ -104,13 +104,13 @@ function VideoCardComponent({
                   type="checkbox"
                   checked={isSelected}
                   onChange={handleSelectionChange}
-                  className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded transition-all duration-200"
+                  className="h-5 w-5 text-primary focus:ring-primary border-border rounded transition-all duration-200"
                 />
               </div>
             )}
 
             {/* Enhanced Thumbnail */}
-            <div className="w-40 h-24 bg-slate-100 relative flex-shrink-0 rounded-xl overflow-hidden shadow-sm group">
+            <div className="w-40 h-24 bg-muted relative flex-shrink-0 rounded-xl overflow-hidden shadow-sm group">
               <VideoThumbnail 
                 thumbnailUrl={video.thumbnail_url} 
                 title={video.title}
@@ -130,8 +130,8 @@ function VideoCardComponent({
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-lg text-slate-800 truncate mb-1">{video.title}</h3>
-                  <p className="text-sm text-slate-500 flex items-center gap-2">
+                  <h3 className="font-bold text-lg text-foreground truncate mb-1">{video.title}</h3>
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     Created {createdAt}
                   </p>
@@ -155,21 +155,21 @@ function VideoCardComponent({
                           <span className="hidden sm:inline">View</span>
                         </Link>
                       </Button>
-                      <Button size="sm" variant="outline" className="bg-white/80 border-slate-300 hover:bg-slate-50 shadow-sm">
+                      <Button size="sm" variant="outline" className="bg-card/80 border-border hover:bg-card/90 shadow-sm">
                         <Download className="h-4 w-4" />
                       </Button>
                     </>
                   )}
 
                   {video.status === "failed" && (
-                    <Button size="sm" variant="outline" onClick={() => onRetryAction(video.id)} className="bg-white/80 border-amber-300 text-amber-700 hover:bg-amber-50 shadow-sm">
+                    <Button size="sm" variant="outline" onClick={() => onRetryAction(video.id)} className="bg-card/80 border-amber-500/50 text-amber-600 dark:text-amber-500 hover:bg-amber-50/20 dark:hover:bg-amber-500/10 shadow-sm">
                       <RefreshCw className="h-4 w-4 mr-2" />
                       <span className="hidden sm:inline">Retry</span>
                     </Button>
                   )}
 
                   {(video.status === "uploading" || video.status === "processing" || video.status === "burning_in") && (
-                    <Button size="sm" disabled className="bg-slate-100 text-slate-500">
+                    <Button size="sm" disabled className="bg-muted text-muted-foreground">
                       <Clock className="h-4 w-4 mr-2" />
                       <span className="hidden sm:inline">Processing...</span>
                     </Button>
@@ -201,14 +201,14 @@ function VideoCardComponent({
             type="checkbox"
             checked={isSelected}
             onChange={handleSelectionChange}
-            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded transition-all duration-200 shadow-sm"
+            className="h-5 w-5 text-primary focus:ring-primary border-border rounded transition-all duration-200 shadow-sm"
           />
         </div>
       )}
 
       <CardContent className="p-0">
         {/* Enhanced Thumbnail */}
-        <div className="aspect-video bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden rounded-t-xl">
+        <div className="aspect-video bg-gradient-to-br from-muted to-muted/80 relative overflow-hidden rounded-t-xl">
           <VideoThumbnail 
             thumbnailUrl={video.thumbnail_url} 
             title={video.title}
@@ -233,8 +233,8 @@ function VideoCardComponent({
 
         {/* Enhanced Content */}
         <div className="p-5">
-          <h3 className="font-bold text-lg text-slate-800 truncate mb-2 group-hover:text-blue-700 transition-colors">{video.title}</h3>
-          <p className="text-sm text-slate-500 mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-lg text-foreground truncate mb-2 group-hover:text-primary transition-colors">{video.title}</h3>
+          <p className="text-sm text-muted-foreground mb-4 flex items-center gap-2">
             <Clock className="h-4 w-4" />
             Created {createdAt}
           </p>
@@ -258,21 +258,21 @@ function VideoCardComponent({
                     View
                   </Link>
                 </Button>
-                <Button size="sm" variant="outline" className="bg-white/80 border-slate-300 hover:bg-slate-50 shadow-sm hover:shadow-md transition-all duration-200">
+                <Button size="sm" variant="outline" className="bg-card/80 border-border hover:bg-card/90 shadow-sm hover:shadow-md transition-all duration-200">
                   <Download className="h-4 w-4" />
                 </Button>
               </>
             )}
 
             {video.status === "failed" && (
-              <Button size="sm" variant="outline" onClick={() => onRetryAction(video.id)} className="flex-1 bg-white/80 border-amber-300 text-amber-700 hover:bg-amber-50 shadow-sm hover:shadow-md transition-all duration-200">
+              <Button size="sm" variant="outline" onClick={() => onRetryAction(video.id)} className="flex-1 bg-card/80 border-amber-500/50 text-amber-600 dark:text-amber-500 hover:bg-amber-50/20 dark:hover:bg-amber-500/10 shadow-sm hover:shadow-md transition-all duration-200">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Retry
               </Button>
             )}
 
             {(video.status === "uploading" || video.status === "processing" || video.status === "burning_in") && (
-              <Button size="sm" disabled className="flex-1 bg-slate-100 text-slate-500">
+              <Button size="sm" disabled className="flex-1 bg-muted text-muted-foreground">
                 <Clock className="h-4 w-4 mr-2" />
                 Processing...
               </Button>

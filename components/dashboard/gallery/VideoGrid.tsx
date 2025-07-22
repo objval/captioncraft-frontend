@@ -29,11 +29,11 @@ export function VideoGrid({
   if (videos.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 mx-auto w-fit mb-6">
-          <Video className="h-16 w-16 mx-auto text-slate-400" />
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-card to-accent/10 dark:from-card dark:to-accent/20 border border-border mx-auto w-fit mb-6">
+          <Video className="h-16 w-16 mx-auto text-muted-foreground" />
         </div>
-        <h3 className="text-2xl font-bold text-slate-800 mb-3">No videos found</h3>
-        <p className="text-slate-600 mb-6 max-w-md mx-auto">
+        <h3 className="text-2xl font-bold text-foreground mb-3">No videos found</h3>
+        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
           {searchQuery || statusFilter !== "all"
             ? "No videos match your search criteria. Try adjusting your filters or search terms."
             : "Upload your first video to get started with transcription and caption burning."}

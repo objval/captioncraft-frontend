@@ -3,7 +3,7 @@
 import { useState, useEffect, lazy, Suspense } from "react"
 import { SimpleNavbar } from "@/components/dashboard/simple-navbar"
 import { EnhancedSidebar } from "@/components/dashboard/enhanced-sidebar"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { FloatingActionButton } from "@/components/ui/floating-action-button"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useVideoSubscription } from "@/hooks/video"
@@ -66,6 +66,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Mobile Sidebar */}
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="w-80 p-0 bg-white/95 backdrop-blur-xl border-slate-200 dark:bg-slate-900/95 dark:border-slate-700">
+            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            <SheetDescription className="sr-only">
+              Application navigation and settings
+            </SheetDescription>
             <EnhancedSidebar 
               isAdmin={isAdmin}
               onUploadClick={() => {

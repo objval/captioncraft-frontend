@@ -51,7 +51,7 @@ export function SegmentsList({
           className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
             activeSegmentId === segment.id
               ? "border-primary bg-primary/10 shadow-sm"
-              : "border-border hover:bg-muted/50 hover:border-slate-300"
+              : "border-border hover:bg-muted/50 hover:border-muted-foreground/20"
           }`}
           onClick={() => onSegmentClick(segment)}
         >

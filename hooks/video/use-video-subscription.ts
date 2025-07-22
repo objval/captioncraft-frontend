@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react"
 import { getUserVideos, subscribeToUserVideos } from "@/lib/media/videos"
 import type { Video } from "@/lib/api/api"
-import { createClient } from "@/lib/database/supabase/client"
 import toast from "@/lib/utils/toast"
+
+const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dl32shhkk/video/upload"
 
 export function useVideoSubscription(userId: string | undefined, initialVideos?: Video[]) {
   const [videos, setVideos] = useState<Video[]>(initialVideos || [])
-  const [loading, setLoading] = useState(!initialVideos)
-  const supabase = createClient()
+  // Only show loading if we don't have initial data and need to fetch
+  const [loading, setLoading] = useState(!initialVideos && !!userId)
 
   useEffect(() => {
     if (!userId) return
@@ -30,32 +31,78 @@ export function useVideoSubscription(userId: string | undefined, initialVideos?:
     }
 
     // Only fetch if no initial data provided
-    if (!initialVideos) {
+    if (initialVideos === undefined) {
       fetchVideos()
+    } else {
+      // If we have initial data, ensure loading is false
+      setLoading(false)
     }
 
-    // Set up real-time subscription using the videos library
-    cleanup = subscribeToUserVideos(userId, (payload) => {
-      handleVideoUpdate(payload)
-    })
+    // Delay subscription setup to ensure client hydration
+    const timeoutId = setTimeout(() => {
+      try {
+        // Set up real-time subscription using the videos library
+        cleanup = subscribeToUserVideos(userId, (payload) => {
+          handleVideoUpdate(payload)
+        })
+      } catch (error) {
+        console.error("Failed to set up video subscription:", error)
+        toast.error("Failed to connect to real-time updates")
+      }
+    }, 100)
 
     return () => {
+      clearTimeout(timeoutId)
       if (cleanup) cleanup()
     }
-  }, [userId, supabase])
+  }, [userId])
+
+  const transformVideoRecord = (record: any): Video => {
+    return {
+      ...record,
+      original_video_url: record.original_video_cloudinary_id
+        ? `${CLOUDINARY_BASE_URL}/${record.original_video_cloudinary_id}`
+        : undefined,
+      final_video_url: record.final_video_cloudinary_id
+        ? `${CLOUDINARY_BASE_URL}/${record.final_video_cloudinary_id}`
+        : undefined,
+      burned_video_url: record.final_video_cloudinary_id
+        ? `${CLOUDINARY_BASE_URL}/${record.final_video_cloudinary_id}`
+        : undefined,
+    }
+  }
 
   const handleVideoUpdate = (payload: any) => {
+    console.log("Video update received:", payload)
     const { eventType, new: newRecord, old: oldRecord } = payload
+
+    if (!eventType) {
+      console.warn("Received update without eventType:", payload)
+      return
+    }
 
     setVideos((prev) => {
       switch (eventType) {
         case "INSERT":
-          return [...prev, newRecord]
+          if (!newRecord || !newRecord.id) {
+            console.warn("INSERT event without valid new record:", payload)
+            return prev
+          }
+          return [...prev, transformVideoRecord(newRecord)]
         case "UPDATE":
-          return prev.map((video) => (video.id === newRecord.id ? newRecord : video))
+          if (!newRecord || !newRecord.id) {
+            console.warn("UPDATE event without valid new record:", payload)
+            return prev
+          }
+          return prev.map((video) => (video.id === newRecord.id ? transformVideoRecord(newRecord) : video))
         case "DELETE":
+          if (!oldRecord || !oldRecord.id) {
+            console.warn("DELETE event without valid old record:", payload)
+            return prev
+          }
           return prev.filter((video) => video.id !== oldRecord.id)
         default:
+          console.warn("Unknown event type:", eventType)
           return prev
       }
     })

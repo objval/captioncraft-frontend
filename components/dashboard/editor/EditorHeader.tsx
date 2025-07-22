@@ -48,10 +48,10 @@ export function EditorHeader({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl border bg-white/80 backdrop-blur-sm shadow-lg">
+    <div className="relative overflow-hidden rounded-xl border bg-card/80 dark:bg-card/60 backdrop-blur-sm shadow-lg">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-indigo-600/5" />
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-100/20 to-transparent rounded-full -translate-y-32 translate-x-32" />
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/5 to-primary/5" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 dark:from-primary/5 to-transparent rounded-full -translate-y-32 translate-x-32" />
       
       <div className="relative p-4 md:p-6">
         {/* Top Row - Title and Status */}
@@ -62,7 +62,7 @@ export function EditorHeader({
                 <Film className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-900 truncate">{video.title}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground truncate">{video.title}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge 
                     variant={video.status === 'complete' ? 'default' : video.status === 'failed' ? 'destructive' : 'secondary'}
@@ -79,7 +79,7 @@ export function EditorHeader({
                       {isRTLLanguage(transcriptData.language) && ' (RTL)'}
                     </Badge>
                   )}
-                  <div className="flex items-center gap-1 text-xs text-slate-600">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     <span>{formatTime(duration)}</span>
                   </div>
@@ -106,13 +106,13 @@ export function EditorHeader({
             <Button
               size="sm"
               variant="outline"
-              className="h-9 bg-gradient-to-r from-emerald-50 to-green-50 hover:from-emerald-100 hover:to-green-100 text-emerald-700 border-emerald-200 shadow-sm relative group overflow-hidden transition-all"
+              className="h-9 bg-gradient-to-r from-emerald-500/10 to-green-500/10 hover:from-emerald-500/20 hover:to-green-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 shadow-sm relative group overflow-hidden transition-all"
               onClick={handleVideoDownload}
               disabled={video.status !== "complete" || downloadProgress !== null}
             >
               {downloadProgress !== null && (
                 <div 
-                  className="absolute inset-0 bg-gradient-to-r from-emerald-200 to-green-300 transition-all duration-300"
+                  className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-green-500/30 transition-all duration-300"
                   style={{ width: `${downloadProgress}%` }}
                 />
               )}
@@ -157,15 +157,15 @@ export function EditorHeader({
 
           {/* Stats Cards */}
           <div className="flex items-center gap-3 ml-auto">
-            <div className="flex items-center gap-1 px-3 py-2 rounded-lg bg-white/60 border border-slate-200/60">
-              <List className="h-4 w-4 text-slate-600" />
-              <span className="text-sm font-medium text-slate-700">{transcriptData?.segments?.length || 0}</span>
-              <span className="text-xs text-slate-500">segments</span>
+            <div className="flex items-center gap-1 px-3 py-2 rounded-lg bg-card/60 dark:bg-card/40 border border-border">
+              <List className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">{transcriptData?.segments?.length || 0}</span>
+              <span className="text-xs text-muted-foreground">segments</span>
             </div>
-            <div className="flex items-center gap-1 px-3 py-2 rounded-lg bg-white/60 border border-slate-200/60">
-              <Type className="h-4 w-4 text-slate-600" />
-              <span className="text-sm font-medium text-slate-700">{transcriptData?.words?.length || 0}</span>
-              <span className="text-xs text-slate-500">words</span>
+            <div className="flex items-center gap-1 px-3 py-2 rounded-lg bg-card/60 dark:bg-card/40 border border-border">
+              <Type className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">{transcriptData?.words?.length || 0}</span>
+              <span className="text-xs text-muted-foreground">words</span>
             </div>
           </div>
         </div>

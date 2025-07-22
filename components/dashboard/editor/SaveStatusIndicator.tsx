@@ -9,13 +9,13 @@ export function SaveStatusIndicator({ status }: SaveStatusIndicatorProps) {
   const getIcon = () => {
     switch (status) {
       case "saved":
-        return <CheckCircle className="h-4 w-4 text-blue-500" />
+        return <CheckCircle className="h-4 w-4 text-primary" />
       case "saving":
-        return <Clock className="h-4 w-4 text-blue-500 animate-spin" />
+        return <Clock className="h-4 w-4 text-primary animate-spin" />
       case "editing":
-        return <Edit3 className="h-4 w-4 text-blue-500" />
+        return <Edit3 className="h-4 w-4 text-primary" />
       case "error":
-        return <AlertCircle className="h-4 w-4 text-red-500" />
+        return <AlertCircle className="h-4 w-4 text-destructive" />
     }
   }
 
@@ -33,9 +33,9 @@ export function SaveStatusIndicator({ status }: SaveStatusIndicatorProps) {
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/60 border border-slate-200/60">
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card/60 dark:bg-card/40 border border-border">
       {getIcon()}
-      <span className="text-sm font-medium text-slate-700">{getText()}</span>
+      <span className="text-sm font-medium text-foreground">{getText()}</span>
     </div>
   )
 }

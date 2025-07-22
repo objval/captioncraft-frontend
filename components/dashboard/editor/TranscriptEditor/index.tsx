@@ -46,9 +46,9 @@ export function TranscriptEditor({
 }: TranscriptEditorProps) {
   if (!transcriptData) {
     return (
-      <Card className="h-full shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+      <Card className="h-full shadow-lg border-0 bg-card/80 dark:bg-card/60 backdrop-blur-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <Edit3 className="h-4 w-4" />
             Transcript Editor
           </CardTitle>
@@ -63,10 +63,10 @@ export function TranscriptEditor({
   }
 
   return (
-    <Card className="h-full shadow-lg border-0 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
+    <Card className="h-full shadow-lg border-0 bg-card/80 dark:bg-card/60 backdrop-blur-sm flex flex-col overflow-hidden">
       <CardHeader className="pb-3 flex-shrink-0 border-b">
         <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-lg">
+          <div className="flex items-center gap-2 text-lg text-foreground">
             <Edit3 className="h-4 w-4" />
             Transcript Editor
           </div>
@@ -84,13 +84,13 @@ export function TranscriptEditor({
         onValueChange={(value) => onEditModeChange(value as EditMode)} 
         className="flex-1 flex flex-col overflow-hidden"
       >
-        <div className="border-b bg-slate-50/50 px-4 pt-2">
-          <TabsList className="grid w-full grid-cols-2 h-10 bg-white/80">
-            <TabsTrigger value="segments" className="text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+        <div className="border-b bg-muted/50 dark:bg-muted/20 px-4 pt-2">
+          <TabsList className="grid w-full grid-cols-2 h-10 bg-card/80 dark:bg-card/60">
+            <TabsTrigger value="segments" className="text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <List className="h-3 w-3 mr-1.5" />
               Segments ({transcriptData.segments?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="words" className="text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <TabsTrigger value="words" className="text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Type className="h-3 w-3 mr-1.5" />
               Words ({transcriptData.words?.length || 0})
             </TabsTrigger>

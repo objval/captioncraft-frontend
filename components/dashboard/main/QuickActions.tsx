@@ -2,7 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Zap, Video, Coins, FileText } from "lucide-react"
 import Link from "next/link"
 
-export function QuickActions() {
+interface QuickActionsProps {
+  loading?: boolean
+}
+
+export function QuickActions({ loading }: QuickActionsProps) {
   const actions = [
     {
       title: "View All Videos",
@@ -56,6 +60,24 @@ export function QuickActions() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {loading ? (
+          // Loading skeleton
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="dashboard-card">
+                <div className="p-6 flex flex-col items-center text-center space-y-3">
+                  <div className="p-3 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse">
+                    <div className="h-7 w-7" />
+                  </div>
+                  <div className="space-y-2 w-full">
+                    <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded mx-auto w-24 animate-pulse" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded mx-auto w-32 animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {actions.map((action) => {
             const content = (
@@ -98,6 +120,7 @@ export function QuickActions() {
             )
           })}
         </div>
+        )}
       </CardContent>
     </Card>
   )

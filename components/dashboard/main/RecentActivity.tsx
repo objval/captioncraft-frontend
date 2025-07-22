@@ -6,9 +6,10 @@ import type { Video as VideoType } from "@/lib/api/api"
 
 interface RecentActivityProps {
   videos: VideoType[]
+  loading?: boolean
 }
 
-export function RecentActivity({ videos }: RecentActivityProps) {
+export function RecentActivity({ videos, loading }: RecentActivityProps) {
   // Get recent videos
   const recentVideos = videos
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -28,7 +29,25 @@ export function RecentActivity({ videos }: RecentActivityProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {recentVideos.length === 0 ? (
+        {loading ? (
+          // Loading skeleton
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="activity-item">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 p-2 rounded-lg bg-slate-200 dark:bg-slate-700 animate-pulse">
+                    <div className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full animate-pulse" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-24 animate-pulse" />
+                  </div>
+                  <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded-full w-16 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : recentVideos.length === 0 ? (
           <div className="text-center py-12">
             <div className="p-4 rounded-full bg-muted mx-auto w-fit mb-4">
               <Video className="h-8 w-8 text-muted-foreground" />
