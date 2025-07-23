@@ -110,15 +110,44 @@ const supabaseFallback = {
 
   async updateVideoTranscript(videoId: string, transcriptData: any) {
     const supabase = createClient()
-    const { data, error } = await supabase
-      .from("videos")
-      .update({ transcript_data: transcriptData })
-      .eq("id", videoId)
-      .select()
+    
+    // Check if transcript exists
+    const { data: existingTranscript } = await supabase
+      .from("transcripts")
+      .select("id")
+      .eq("video_id", videoId)
       .single()
-
-    if (error) throw error
-    return data
+    
+    if (existingTranscript) {
+      // Update existing transcript
+      const { data, error } = await supabase
+        .from("transcripts")
+        .update({ 
+          transcript_data: transcriptData,
+          edited_transcript_data: transcriptData,
+          updated_at: new Date().toISOString()
+        })
+        .eq("video_id", videoId)
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data
+    } else {
+      // Create new transcript
+      const { data, error } = await supabase
+        .from("transcripts")
+        .insert({ 
+          video_id: videoId,
+          transcript_data: transcriptData,
+          edited_transcript_data: transcriptData
+        })
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data
+    }
   },
 }
 
@@ -185,7 +214,106 @@ export const api = {
     }
   },
 
-  deleteVideo: (id: string) => apiCall(`/videos/${id}`, { method: "DELETE" }),
+  deleteVideo: async (id: string) => {
+    try {
+      return await apiCall(`/videos/${id}`, { method: "DELETE" })
+    } catch (error) {
+      console.log("Using Supabase fallback for deleteVideo")
+      const supabase = createClient()
+      
+      // Delete related records first (due to foreign key constraints)
+      // Delete transcripts
+      await supabase
+        .from("transcripts")
+        .delete()
+        .eq("video_id", id)
+      
+      // Delete the video
+      const { error: deleteError } = await supabase
+        .from("videos")
+        .delete()
+        .eq("id", id)
+      
+      if (deleteError) throw deleteError
+      
+      return { success: true, message: "Video deleted successfully" }
+    }
+  },
+
+  // Bulk delete videos - uses the new bulk endpoint
+  deleteVideos: async (videoIds: string[]) => {
+    try {
+      return await apiCall<{
+        deleted: number
+        failed: number
+        errors: { videoId: string; error: string }[]
+      }>("/videos", { 
+        method: "DELETE",
+        body: JSON.stringify({ videoIds })
+      })
+    } catch (error: any) {
+      // Check if it's a 404 - bulk endpoint might not be deployed yet
+      if (error.status === 404 || error.message?.includes('Cannot DELETE')) {
+        console.log("Bulk delete endpoint not available, falling back to individual deletes")
+        
+        // Fall back to individual deletes
+        let deleted = 0
+        let failed = 0
+        const errors: { videoId: string; error: string }[] = []
+        
+        for (const videoId of videoIds) {
+          try {
+            await api.deleteVideo(videoId)
+            deleted++
+          } catch (err: any) {
+            failed++
+            errors.push({ 
+              videoId, 
+              error: err.message || "Failed to delete video" 
+            })
+          }
+        }
+        
+        return { deleted, failed, errors }
+      }
+      
+      // For other errors, use Supabase fallback
+      console.log("Using Supabase fallback for bulk deleteVideos")
+      const supabase = createClient()
+      
+      let deleted = 0
+      let failed = 0
+      const errors: { videoId: string; error: string }[] = []
+      
+      // Process deletions in batches to avoid overwhelming the database
+      for (const videoId of videoIds) {
+        try {
+          // Delete transcripts first
+          await supabase
+            .from("transcripts")
+            .delete()
+            .eq("video_id", videoId)
+          
+          // Delete the video
+          const { error: deleteError } = await supabase
+            .from("videos")
+            .delete()
+            .eq("id", videoId)
+          
+          if (deleteError) throw deleteError
+          deleted++
+        } catch (err: any) {
+          failed++
+          errors.push({ 
+            videoId, 
+            error: err.message || "Failed to delete video" 
+          })
+        }
+      }
+      
+      return { deleted, failed, errors }
+    }
+  },
   retryVideo: (id: string) => apiCall(`/videos/${id}/retry`, { method: "POST" }),
   burnInVideo: (id: string) => apiCall(`/videos/${id}/burn-in`, { method: "POST" }),
 

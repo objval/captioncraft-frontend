@@ -68,13 +68,25 @@ export default function GalleryPage() {
     if (selectedVideos.size === 0) return
     
     try {
-      const deletePromises = Array.from(selectedVideos).map(id => api.deleteVideo(id))
-      await Promise.all(deletePromises)
-      toast.success(`${selectedVideos.size} videos deleted successfully`)
+      const videoIds = Array.from(selectedVideos)
+      
+      // Use bulk delete endpoint for better performance
+      const result = await api.deleteVideos(videoIds)
+      
+      if (result.deleted > 0) {
+        toast.success(`Deleted ${result.deleted} video${result.deleted !== 1 ? 's' : ''}`)
+      }
+      
+      if (result.failed > 0) {
+        toast.warning(`Failed to delete ${result.failed} video${result.failed !== 1 ? 's' : ''}`)
+        console.error('Delete errors:', result.errors)
+      }
+      
       setSelectedVideos(new Set())
       setIsSelectionMode(false)
     } catch (error) {
-      toast.error("Failed to delete some videos")
+      toast.error("Delete operation failed")
+      console.error('Bulk delete error:', error)
     }
   }
 

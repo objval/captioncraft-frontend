@@ -194,7 +194,12 @@ export default function EditorPage() {
   useSingleVideoSubscription(videoId, handleVideoUpdate, handleStatusChange)
 
   // Transcript editing handlers
-  const { handleSegmentEdit, handleWordEdit } = useTranscriptEditing({
+  const { 
+    handleSegmentEdit, 
+    handleWordEdit,
+    handleFindReplace,
+    fixPunctuation
+  } = useTranscriptEditing({
     transcriptData,
     onSave: (updatedTranscript) => {
       setTranscriptData(updatedTranscript)
@@ -473,7 +478,21 @@ export default function EditorPage() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't interfere with input fields
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        // But allow Ctrl/Cmd shortcuts
+        if (e.ctrlKey || e.metaKey) {
+          if (e.key === 's') {
+            e.preventDefault()
+            // Save is automatic with debouncing
+            toast.info('Changes are saved automatically')
+          } else if (e.key === 'f') {
+            e.preventDefault()
+            // Trigger find and replace
+            const button = document.querySelector('[aria-label="Find & Replace"]') as HTMLButtonElement
+            button?.click()
+          }
+        }
         return
       }
 
@@ -653,6 +672,8 @@ export default function EditorPage() {
               onSaveWordEdit={handleWordSave}
               onCancelSegmentEdit={cancelSegmentEdit}
               onCancelWordEdit={cancelWordEdit}
+              onFindReplace={handleFindReplace}
+              onFixPunctuation={fixPunctuation}
             />
           </div>
         </div>

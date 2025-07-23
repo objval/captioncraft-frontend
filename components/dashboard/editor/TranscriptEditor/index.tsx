@@ -1,13 +1,16 @@
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Edit3, Type, List } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Edit3, Type, List, Search, Wand2 } from "lucide-react"
 import type { TranscriptData, TranscriptSegment, TranscriptWord } from "@/lib/api/api"
 import type { EditMode } from "@/lib/utils/types"
 import { isRTLLanguage } from "@/lib/utils/rtl-helpers"
 import { SegmentsList } from "./SegmentsList"
 import { WordsList } from "./WordsList"
+import { FindReplaceDialog } from "../FindReplaceDialog"
 
 interface TranscriptEditorProps {
   transcriptData: TranscriptData | null
@@ -25,6 +28,8 @@ interface TranscriptEditorProps {
   onSaveWordEdit: (index: number, word: string, startTime: number, endTime: number) => void
   onCancelSegmentEdit: () => void
   onCancelWordEdit: () => void
+  onFindReplace?: (find: string, replace: string, caseSensitive: boolean) => number
+  onFixPunctuation?: () => void
 }
 
 export function TranscriptEditor({
@@ -43,7 +48,11 @@ export function TranscriptEditor({
   onSaveWordEdit,
   onCancelSegmentEdit,
   onCancelWordEdit,
+  onFindReplace,
+  onFixPunctuation,
 }: TranscriptEditorProps) {
+  const [showFindReplace, setShowFindReplace] = useState(false)
+  
   if (!transcriptData) {
     return (
       <Card className="h-full shadow-lg border-0 bg-card/80 dark:bg-card/60 backdrop-blur-sm">
@@ -65,18 +74,43 @@ export function TranscriptEditor({
   return (
     <Card className="h-full shadow-lg border-0 bg-card/80 dark:bg-card/60 backdrop-blur-sm flex flex-col overflow-hidden">
       <CardHeader className="pb-3 flex-shrink-0 border-b">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-lg text-foreground">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <Edit3 className="h-4 w-4" />
             Transcript Editor
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {onFixPunctuation && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onFixPunctuation}
+                className="h-8 text-xs"
+              >
+                <Wand2 className="h-3 w-3 mr-1" />
+                Fix Punctuation
+              </Button>
+            )}
+            {onFindReplace && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowFindReplace(true)}
+                className="h-8 text-xs"
+                aria-label="Find & Replace"
+              >
+                <Search className="h-3 w-3 mr-1" />
+                Find & Replace
+              </Button>
+            )}
+            {transcriptData.language && (
+              <Badge variant="outline" className="text-xs">
+                {transcriptData.language.toUpperCase()} 
+                {isRTLLanguage(transcriptData.language) && ' (RTL)'}
+              </Badge>
+            )}
           </div>
-          {transcriptData.language && (
-            <Badge variant="outline" className="text-xs">
-              {transcriptData.language.toUpperCase()} 
-              {isRTLLanguage(transcriptData.language) && ' (RTL)'}
-            </Badge>
-          )}
-        </CardTitle>
+        </div>
       </CardHeader>
       
       <Tabs 
@@ -141,6 +175,15 @@ export function TranscriptEditor({
           </TabsContent>
         </div>
       </Tabs>
+      
+      {/* Find and Replace Dialog */}
+      {onFindReplace && (
+        <FindReplaceDialog
+          open={showFindReplace}
+          onOpenChange={setShowFindReplace}
+          onFindReplace={onFindReplace}
+        />
+      )}
     </Card>
   )
 }
