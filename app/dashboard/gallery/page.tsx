@@ -32,6 +32,15 @@ export default function GalleryPage() {
     try {
       await api.deleteVideo(id)
       toast.success("Video deleted successfully")
+      
+      // Force a page reload if video doesn't disappear within 2 seconds
+      setTimeout(() => {
+        const videoStillExists = videos.some(video => video.id === id)
+        if (videoStillExists) {
+          console.log('Video not updated via subscription, reloading page...')
+          window.location.reload()
+        }
+      }, 2000)
     } catch (error) {
       toast.error("Failed to delete video")
     }
@@ -84,6 +93,20 @@ export default function GalleryPage() {
       
       setSelectedVideos(new Set())
       setIsSelectionMode(false)
+      
+      // Force a page reload if videos don't update within 2 seconds
+      // This is a fallback in case the subscription doesn't update immediately
+      setTimeout(() => {
+        // Check if any deleted videos are still visible
+        const deletedVideosStillVisible = videoIds.some(id => 
+          videos.some(video => video.id === id)
+        )
+        
+        if (deletedVideosStillVisible) {
+          console.log('Videos not updated via subscription, reloading page...')
+          window.location.reload()
+        }
+      }, 2000)
     } catch (error) {
       toast.error("Delete operation failed")
       console.error('Bulk delete error:', error)
