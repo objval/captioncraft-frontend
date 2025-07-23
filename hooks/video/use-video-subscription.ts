@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { getUserVideos, subscribeToUserVideos } from "@/lib/media/videos"
 import type { Video } from "@/lib/api/api"
 import toast from "@/lib/utils/toast"
@@ -11,6 +11,7 @@ export function useVideoSubscription(userId: string | undefined, initialVideos?:
   const [videos, setVideos] = useState<Video[]>(initialVideos || [])
   // Only show loading if we don't have initial data and need to fetch
   const [loading, setLoading] = useState(!initialVideos && !!userId)
+  const [subscriptionKey, setSubscriptionKey] = useState(0) // Force re-subscription
 
   useEffect(() => {
     if (!userId) return
@@ -38,24 +39,29 @@ export function useVideoSubscription(userId: string | undefined, initialVideos?:
       setLoading(false)
     }
 
-    // Delay subscription setup to ensure client hydration
-    const timeoutId = setTimeout(() => {
-      try {
-        // Set up real-time subscription using the videos library
-        cleanup = subscribeToUserVideos(userId, (payload) => {
-          handleVideoUpdate(payload)
-        })
-      } catch (error) {
-        console.error("Failed to set up video subscription:", error)
-        toast.error("Failed to connect to real-time updates")
-      }
-    }, 100)
+    // Only set up real-time subscriptions on the client side
+    let timeoutId: NodeJS.Timeout | undefined
+    
+    if (typeof window !== 'undefined') {
+      // Delay subscription setup to ensure client hydration
+      timeoutId = setTimeout(() => {
+        try {
+          // Set up real-time subscription using the videos library
+          cleanup = subscribeToUserVideos(userId, (payload) => {
+            handleVideoUpdate(payload)
+          })
+        } catch (error) {
+          console.error("Failed to set up video subscription:", error)
+          toast.error("Failed to connect to real-time updates")
+        }
+      }, 100)
+    }
 
     return () => {
-      clearTimeout(timeoutId)
+      if (timeoutId) clearTimeout(timeoutId)
       if (cleanup) cleanup()
     }
-  }, [userId])
+  }, [userId, subscriptionKey]) // Re-run when subscriptionKey changes
 
   const transformVideoRecord = (record: any): Video => {
     return {
@@ -128,5 +134,21 @@ export function useVideoSubscription(userId: string | undefined, initialVideos?:
     }
   }
 
-  return { videos, loading, setVideos }
+  // Function to force refresh subscription and fetch latest videos
+  const refreshSubscription = useCallback(async () => {
+    console.log("Refreshing video subscription...")
+    
+    // Fetch latest videos immediately
+    try {
+      const videosData = await getUserVideos()
+      setVideos(videosData)
+    } catch (error) {
+      console.error("Failed to refresh videos:", error)
+    }
+    
+    // Force subscription to reconnect
+    setSubscriptionKey(prev => prev + 1)
+  }, [])
+
+  return { videos, loading, setVideos, refreshSubscription }
 }

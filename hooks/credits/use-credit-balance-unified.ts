@@ -122,6 +122,11 @@ export function useCreditBalance(
       lastKnownCreditsRef.current = initialCredits
     }
 
+    // Only set up real-time subscriptions on the client side
+    if (typeof window === 'undefined') {
+      return
+    }
+
     // Real-time subscription for profile updates
     log("Setting up real-time subscription")
     const profileChannel = supabase

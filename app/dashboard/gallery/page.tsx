@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useVideoSubscription } from "@/hooks/video"
 import toast from "@/lib/utils/toast"
+import { uploadEvents } from "@/lib/utils/upload-events"
 
 // Import gallery components
 import { GalleryHeader } from "@/components/dashboard/gallery/GalleryHeader"
@@ -20,7 +21,18 @@ export default function GalleryPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false)
 
   const { user } = useAuth()
-  const { videos, loading } = useVideoSubscription(user?.id)
+  const { videos, loading, refreshSubscription } = useVideoSubscription(user?.id)
+
+  // Listen for upload completion events
+  useEffect(() => {
+    const cleanup = uploadEvents.onUploadComplete((videoId) => {
+      console.log('Video upload completed, refreshing gallery:', videoId)
+      // Force refresh the subscription to ensure the new video appears
+      refreshSubscription()
+    })
+
+    return cleanup
+  }, [refreshSubscription])
 
   const filteredVideos = videos.filter((video) => {
     const matchesSearch = video.title.toLowerCase().includes(searchQuery.toLowerCase())

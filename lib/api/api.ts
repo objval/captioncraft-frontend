@@ -247,7 +247,7 @@ export const api = {
         deleted: number
         failed: number
         errors: { videoId: string; error: string }[]
-      }>("/videos", { 
+      }>("/videos/bulk", { 
         method: "DELETE",
         body: JSON.stringify({ videoIds })
       })

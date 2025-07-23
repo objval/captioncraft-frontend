@@ -10,13 +10,15 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { Upload, X, AlertCircle, Coins, CheckCircle } from "lucide-react"
 import toast from "@/lib/utils/toast"
 import { createClient } from "@/lib/database/supabase/client"
+import { uploadEvents } from "@/lib/utils/upload-events"
 
 interface UploadModalProps {
   isOpen: boolean
   onCloseAction: () => void
+  onUploadComplete?: (videoId: string) => void
 }
 
-export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
+export function UploadModal({ isOpen, onCloseAction, onUploadComplete }: UploadModalProps) {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -195,17 +197,31 @@ export function UploadModal({ isOpen, onCloseAction }: UploadModalProps) {
       setUploadProgress(100)
       setUploadComplete(true)
 
-      toast.success(`Video uploaded successfully! Video ID: ${response.videoId || response.id}`)
+      const videoId = response.videoId || response.id
+      toast.success(`Video uploaded successfully! Video ID: ${videoId}`)
       console.log("Upload response:", response)
       console.log("Upload complete - waiting for real-time credit update")
 
       // Credits will be updated via real-time subscription
       // No need to manually refresh
+      
+      // Notify parent component that upload is complete
+      if (onUploadComplete && videoId) {
+        // Wait a bit to ensure the backend has created the database record
+        setTimeout(() => {
+          onUploadComplete(videoId)
+        }, 1000)
+      }
+      
+      // Emit global upload complete event
+      setTimeout(() => {
+        uploadEvents.emitUploadComplete(videoId)
+      }, 1500) // Wait 1.5 seconds to ensure database record exists
 
-      // Auto-close after 2 seconds
+      // Auto-close after 3 seconds to ensure database record is created
       setTimeout(() => {
         handleClose()
-      }, 2000)
+      }, 3000)
     } catch (error: any) {
       console.error("Upload error:", error)
       handleUploadError(error)
