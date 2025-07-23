@@ -16,6 +16,9 @@ import { ErrorState } from "@/components/dashboard/editor/ErrorState"
 import { CutListPanel } from "@/components/dashboard/editor/VideoPlayer/CutListPanel"
 import { CuttingDialog } from "@/components/dashboard/editor/CuttingDialog"
 import { TimelineCuttingHelp } from "@/components/dashboard/editor/TimelineCuttingHelp"
+import { MobileCuttingControls } from "@/components/dashboard/editor/MobileCuttingControls"
+import { MobileCutList } from "@/components/dashboard/editor/MobileCutList"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { VideoSource } from "@/components/dashboard/editor/VideoSourceSelector"
 import { convertCutMarksToKeepSegments, validateKeepSegments } from "@/lib/utils/cutting-helpers"
 import toast from "@/lib/utils/toast"
@@ -37,6 +40,12 @@ export default function EditorPage() {
   const [enableCutting, setEnableCutting] = useState(false)
   const [videoSource, setVideoSource] = useState<VideoSource>('original')
   const [showCuttingDialog, setShowCuttingDialog] = useState(false)
+  const [showCutConfirmDialog, setShowCutConfirmDialog] = useState(false)
+  const [pendingCutData, setPendingCutData] = useState<{
+    segments: any[]
+    percentageRemoved: string
+    cutCount: number
+  } | null>(null)
 
   // Video player controls
   const {
@@ -417,13 +426,22 @@ export default function EditorPage() {
       return
     }
 
-    // Confirm with user
+    // Prepare confirmation data
     const totalCutDuration = cutMarks.reduce((sum, mark) => sum + (mark.endTime - mark.startTime), 0)
     const percentageRemoved = ((totalCutDuration / duration) * 100).toFixed(1)
     
-    if (!confirm(`This will remove ${cutMarks.length} sections (${percentageRemoved}% of the video). Continue?`)) {
-      return
-    }
+    // Store data and show confirmation dialog
+    setPendingCutData({
+      segments: keepSegments,
+      percentageRemoved,
+      cutCount: cutMarks.length
+    })
+    setShowCutConfirmDialog(true)
+  }, [video, duration, cutMarks])
+
+  // Handle confirmed cut execution
+  const handleConfirmedCut = useCallback(async () => {
+    if (!video || !pendingCutData) return
 
     try {
       // Determine source type based on current video source
@@ -432,7 +450,7 @@ export default function EditorPage() {
       await api.cutVideo(video.id, {
         sourceType,
         mode: 'manual',
-        manualSegments: keepSegments
+        manualSegments: pendingCutData.segments
       })
       
       toast.success('Video cutting started! Your video will be ready shortly.')
@@ -440,6 +458,8 @@ export default function EditorPage() {
       // Clear cuts after successful submission
       clearAllCuts()
       setEnableCutting(false)
+      setShowCutConfirmDialog(false)
+      setPendingCutData(null)
     } catch (error: any) {
       console.error('Timeline cutting error:', error)
       if (error.message?.includes('credits')) {
@@ -448,7 +468,7 @@ export default function EditorPage() {
         toast.error('Failed to cut video')
       }
     }
-  }, [video, duration, cutMarks, videoSource, clearAllCuts])
+  }, [video, pendingCutData, videoSource, clearAllCuts])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -514,10 +534,44 @@ export default function EditorPage() {
         )}
 
         {/* Main Content */}
-        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-6">
-          {/* Video Player */}
-          <div className="lg:col-span-2">
-            <div className="space-y-4">
+        <div className="space-y-4">
+          {/* Mobile Cutting Controls - Show only on mobile when cutting is enabled */}
+          {enableCutting && (
+            <MobileCuttingControls
+              currentTime={currentTime}
+              duration={duration}
+              isPlaying={isPlaying}
+              onTogglePlay={togglePlayPause}
+              onSeek={seekTo}
+              onStartCut={() => startDraft(currentTime)}
+              onEndCut={() => {
+                if (draft) {
+                  updateDraft(currentTime)
+                  completeDraft()
+                }
+              }}
+              isDrafting={!!draft}
+            />
+          )}
+          
+          {/* Mobile Cut List - Show only on mobile when cutting is enabled */}
+          {enableCutting && cutMarks.length > 0 && (
+            <MobileCutList
+              cutMarks={cutMarks}
+              activeCutId={activeCutId}
+              totalCutDuration={stats.totalCutDuration}
+              remainingDuration={stats.remainingDuration}
+              percentageCut={stats.percentageCut}
+              onSelectCut={setActiveCut}
+              onRemoveCutMark={removeCutMark}
+              onSeekToTime={handleSeek}
+            />
+          )}
+
+          <div className="lg:grid lg:grid-cols-3 lg:gap-6">
+            {/* Video Player */}
+            <div className="lg:col-span-2">
+              <div className="space-y-4">
               <VideoPlayer
                 video={video}
                 videoRef={videoRef}
@@ -562,9 +616,10 @@ export default function EditorPage() {
                 onRedo={redo}
               />
               
-              {/* Cut List Panel - Show only when cutting is enabled */}
+              {/* Cut List Panel - Show only on desktop when cutting is enabled */}
               {enableCutting && (
-                <CutListPanel
+                <div className="hidden lg:block">
+                  <CutListPanel
                   cutMarks={cutMarks}
                   activeCutId={activeCutId}
                   totalCutDuration={stats.totalCutDuration}
@@ -574,7 +629,8 @@ export default function EditorPage() {
                   onUpdateCutMark={updateCutMark}
                   onRemoveCutMark={removeCutMark}
                   onSeekToTime={handleSeek}
-                />
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -600,6 +656,7 @@ export default function EditorPage() {
             />
           </div>
         </div>
+        </div>
 
         {/* Keyboard Shortcuts Help - Hidden on Mobile */}
         <KeyboardShortcuts />
@@ -614,6 +671,24 @@ export default function EditorPage() {
           onCutComplete={handleCutComplete}
         />
       )}
+
+      {/* Cut Confirmation Dialog */}
+      <ConfirmDialog
+        open={showCutConfirmDialog}
+        onOpenChange={setShowCutConfirmDialog}
+        title="Confirm Video Cuts"
+        description={
+          pendingCutData
+            ? `This will remove ${pendingCutData.cutCount} section${
+                pendingCutData.cutCount !== 1 ? 's' : ''
+              } (${pendingCutData.percentageRemoved}% of the video). This action will use 1 credit.`
+            : ''
+        }
+        confirmText="Apply Cuts"
+        cancelText="Cancel"
+        onConfirm={handleConfirmedCut}
+        variant="destructive"
+      />
     </div>
   )
 }

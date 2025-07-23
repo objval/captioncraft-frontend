@@ -92,13 +92,14 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   return (
     <Card className="shadow-lg border-0 bg-card/80 dark:bg-card/60 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+      <CardHeader className="pb-3 px-3 sm:px-6">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-foreground">
           <Film className="h-4 w-4" />
-          Video Player
+          <span className="hidden sm:inline">Video Player</span>
+          <span className="sm:hidden">Player</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 px-2 sm:px-6 pb-3 sm:pb-6">
         {/* Video Element */}
         <div className="relative bg-black rounded-lg overflow-hidden shadow-xl">
           <video
@@ -114,9 +115,10 @@ export function VideoPlayer({
 
         {/* Player Controls */}
         <div className="space-y-3">
-          {/* Cutting Controls */}
+          {/* Cutting Controls - Hide on mobile as we have separate mobile controls */}
           {enableCutting && (
-            <CutMarkControls
+            <div className="hidden lg:block">
+              <CutMarkControls
               cutMode={cutMode}
               isPreviewMode={isPreviewMode}
               showCutOverlay={showCutOverlay}
@@ -129,7 +131,8 @@ export function VideoPlayer({
               onClearAllCuts={onClearAllCuts!}
               onUndo={onUndo!}
               onRedo={onRedo!}
-            />
+              />
+            </div>
           )}
 
           {/* Play/Pause and Skip Controls */}
@@ -140,9 +143,10 @@ export function VideoPlayer({
             onSkipForward={onSkipForward}
           />
 
-          {/* Progress Bar or Cutting Timeline */}
+          {/* Progress Bar or Cutting Timeline - Simplified on mobile */}
           {enableCutting ? (
-            <CuttingTimeline
+            <div className="hidden lg:block">
+              <CuttingTimeline
               currentTime={currentTime}
               duration={duration}
               cutMarks={cutMarks}
@@ -157,7 +161,8 @@ export function VideoPlayer({
               onCancelDraft={onCancelDraft!}
               onSelectCut={onSelectCut!}
               onUpdateCutMark={onUpdateCutMark!}
-            />
+              />
+            </div>
           ) : (
             <ProgressBar
               currentTime={currentTime}
@@ -165,14 +170,27 @@ export function VideoPlayer({
               onSeek={onSeek}
             />
           )}
+          
+          {/* Mobile Progress Bar for cutting mode */}
+          {enableCutting && (
+            <div className="lg:hidden">
+              <ProgressBar
+                currentTime={currentTime}
+                duration={duration}
+                onSeek={onSeek}
+              />
+            </div>
+          )}
 
-          {/* Volume Control */}
-          <VolumeControl
-            volume={volume}
-            isMuted={isMuted}
-            onVolumeChange={onVolumeChange}
-            onToggleMute={onToggleMute}
-          />
+          {/* Volume Control - Hide on mobile to save space */}
+          <div className="hidden sm:block">
+            <VolumeControl
+              volume={volume}
+              isMuted={isMuted}
+              onVolumeChange={onVolumeChange}
+              onToggleMute={onToggleMute}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -79,7 +79,7 @@ export function EditorHeader({
                 <Film className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground truncate">{video.title}</h1>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">{video.title}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge 
                     variant={video.status === 'complete' ? 'default' : video.status === 'failed' ? 'destructive' : 'secondary'}
@@ -110,7 +110,7 @@ export function EditorHeader({
         </div>
 
         {/* Action Buttons Row */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Video Source Selector */}
           {onVideoSourceChange && (
             <VideoSourceSelector
@@ -125,11 +125,12 @@ export function EditorHeader({
             <Button
               size="sm"
               variant="outline"
-              className="h-9"
+              className="h-9 text-xs sm:text-sm"
               onClick={onCutVideo}
             >
-              <Wand2 className="h-4 w-4 mr-2" />
-              Auto Cut
+              <Wand2 className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Auto Cut</span>
+              <span className="sm:hidden">Auto</span>
             </Button>
           )}
 
@@ -138,11 +139,12 @@ export function EditorHeader({
             <Button
               size="sm"
               variant={enableCutting ? "default" : "ghost"}
-              className="h-9"
+              className="h-9 text-xs sm:text-sm"
               onClick={onToggleCutting}
             >
-              <Scissors className="h-4 w-4 mr-2" />
-              {enableCutting ? "Exit Manual Cut" : "Manual Cut"}
+              <Scissors className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">{enableCutting ? "Exit Manual Cut" : "Manual Cut"}</span>
+              <span className="sm:hidden">{enableCutting ? "Exit" : "Manual"}</span>
             </Button>
           )}
 
@@ -151,11 +153,12 @@ export function EditorHeader({
             <Button
               size="sm"
               variant="destructive"
-              className="h-9"
+              className="h-9 text-xs sm:text-sm"
               onClick={onExecuteTimelineCuts}
             >
-              <Scissors className="h-4 w-4 mr-2" />
-              Apply {cutMarksCount} Cut{cutMarksCount !== 1 ? 's' : ''}
+              <Scissors className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Apply {cutMarksCount} Cut{cutMarksCount !== 1 ? 's' : ''}</span>
+              <span className="sm:hidden">Apply ({cutMarksCount})</span>
             </Button>
           )}
 
@@ -213,8 +216,8 @@ export function EditorHeader({
             )}
           </Button>
 
-          {/* Stats Cards */}
-          <div className="flex items-center gap-3 ml-auto">
+          {/* Stats Cards - Hidden on mobile */}
+          <div className="hidden lg:flex items-center gap-3 ml-auto">
             <div className="flex items-center gap-1 px-3 py-2 rounded-lg bg-card/60 dark:bg-card/40 border border-border">
               <List className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">{transcriptData?.segments?.length || 0}</span>
