@@ -11,11 +11,14 @@ import {
   List,
   Type,
   Film,
+  Scissors,
+  Wand2,
 } from "lucide-react"
 import type { Video, TranscriptData } from "@/lib/api/api"
 import type { SaveStatus } from "@/lib/utils/types"
 import { SaveStatusIndicator } from "./SaveStatusIndicator"
 import { VideoSourceToggle } from "./VideoSourceToggle"
+import { VideoSourceSelector, type VideoSource } from "./VideoSourceSelector"
 import { downloadVideo } from "@/lib/utils/video-download"
 import { formatTime } from "@/lib/utils/time-formatters"
 import { isRTLLanguage } from "@/lib/utils/rtl-helpers"
@@ -29,6 +32,13 @@ interface EditorHeaderProps {
   onShowFinalVideoChange: (show: boolean) => void
   onBurnIn: () => void
   burningIn: boolean
+  enableCutting?: boolean
+  onToggleCutting?: () => void
+  onCutVideo?: () => void
+  onExecuteTimelineCuts?: () => void
+  cutMarksCount?: number
+  videoSource?: VideoSource
+  onVideoSourceChange?: (source: VideoSource) => void
 }
 
 export function EditorHeader({
@@ -40,6 +50,13 @@ export function EditorHeader({
   onShowFinalVideoChange,
   onBurnIn,
   burningIn,
+  enableCutting = false,
+  onToggleCutting,
+  onCutVideo,
+  onExecuteTimelineCuts,
+  cutMarksCount = 0,
+  videoSource = 'original',
+  onVideoSourceChange,
 }: EditorHeaderProps) {
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null)
 
@@ -94,12 +111,53 @@ export function EditorHeader({
 
         {/* Action Buttons Row */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Video Source Toggle */}
-          <VideoSourceToggle
-            showFinalVideo={showFinalVideo}
-            hasFinalVideo={!!video.final_video_url}
-            onToggle={onShowFinalVideoChange}
-          />
+          {/* Video Source Selector */}
+          {onVideoSourceChange && (
+            <VideoSourceSelector
+              video={video}
+              currentSource={videoSource}
+              onSourceChange={onVideoSourceChange}
+            />
+          )}
+
+          {/* Auto Cut Button */}
+          {onCutVideo && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9"
+              onClick={onCutVideo}
+            >
+              <Wand2 className="h-4 w-4 mr-2" />
+              Auto Cut
+            </Button>
+          )}
+
+          {/* Cutting Mode Toggle Button - For manual cutting interface */}
+          {onToggleCutting && (
+            <Button
+              size="sm"
+              variant={enableCutting ? "default" : "ghost"}
+              className="h-9"
+              onClick={onToggleCutting}
+            >
+              <Scissors className="h-4 w-4 mr-2" />
+              {enableCutting ? "Exit Manual Cut" : "Manual Cut"}
+            </Button>
+          )}
+
+          {/* Execute Timeline Cuts Button */}
+          {onExecuteTimelineCuts && (
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-9"
+              onClick={onExecuteTimelineCuts}
+            >
+              <Scissors className="h-4 w-4 mr-2" />
+              Apply {cutMarksCount} Cut{cutMarksCount !== 1 ? 's' : ''}
+            </Button>
+          )}
 
           {/* Download Button */}
           {video.final_video_url && (

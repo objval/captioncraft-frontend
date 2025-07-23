@@ -14,7 +14,7 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers: {
-        ...(options.headers && !(options.body instanceof FormData) && { "Content-Type": "application/json" }),
+        ...(options.body && !(options.body instanceof FormData) && { "Content-Type": "application/json" }),
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
@@ -65,6 +65,12 @@ const supabaseFallback = {
         : null,
       burned_video_url: video.final_video_cloudinary_id
         ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${video.final_video_cloudinary_id}`
+        : null,
+      cut_original_url: video.cut_original_cloudinary_id
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${video.cut_original_cloudinary_id}`
+        : null,
+      cut_burned_url: video.cut_burned_cloudinary_id
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${video.cut_burned_cloudinary_id}`
         : null, 
     }))
   },
@@ -92,6 +98,12 @@ const supabaseFallback = {
         : null,
       burned_video_url: data.final_video_cloudinary_id
         ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${data.final_video_cloudinary_id}`
+        : null,
+      cut_original_url: data.cut_original_cloudinary_id
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${data.cut_original_cloudinary_id}`
+        : null,
+      cut_burned_url: data.cut_burned_cloudinary_id
+        ? `https://res.cloudinary.com/${YOUR_CLOUD_NAME}/video/upload/${data.cut_burned_cloudinary_id}`
         : null,
     }
   },
@@ -176,6 +188,29 @@ export const api = {
   deleteVideo: (id: string) => apiCall(`/videos/${id}`, { method: "DELETE" }),
   retryVideo: (id: string) => apiCall(`/videos/${id}/retry`, { method: "POST" }),
   burnInVideo: (id: string) => apiCall(`/videos/${id}/burn-in`, { method: "POST" }),
+
+  // Video cutting endpoints
+  analyzeSilence: (id: string, config?: Partial<CuttingConfig>) => 
+    apiCall<SilenceAnalysisResult>(`/videos/${id}/analyze-silence`, {
+      method: "POST",
+      body: config ? JSON.stringify({ config }) : JSON.stringify({}),
+    }),
+
+  cutVideo: (id: string, options: {
+    sourceType: 'original' | 'burned'
+    mode: 'automatic' | 'manual'
+    config?: Partial<CuttingConfig>
+    manualSegments?: CutSegment[]
+  }) => apiCall(`/videos/${id}/cut`, {
+    method: "POST",
+    body: JSON.stringify(options),
+  }),
+
+  getVideoCuts: (id: string) => 
+    apiCall<{ cuts: VideoCut[], message: string }>(`/videos/${id}/cuts`),
+
+  deleteVideoCut: (videoId: string, cutId: string) => 
+    apiCall(`/videos/${videoId}/cuts/${cutId}`, { method: "DELETE" }),
 
   // New transcript endpoint - PATCH /videos/:id/transcript
   updateVideoTranscript: async (videoId: string, transcriptData: any) => {
@@ -355,6 +390,66 @@ export interface Video {
   transcript_data?: TranscriptData
   created_at: string
   transcripts?: Transcript[]
+  // Cutting fields
+  cutting_config?: CuttingConfig
+  cut_segments?: CutSegment[]
+  original_duration?: number
+  cut_duration?: number
+  cut_original_cloudinary_id?: string
+  cut_burned_cloudinary_id?: string
+  cut_original_url?: string
+  cut_burned_url?: string
+  has_cut_original?: boolean
+  has_cut_burned?: boolean
+}
+
+// Cutting related interfaces
+export interface CuttingConfig {
+  silenceThreshold: number
+  offsetBefore: number
+  offsetAfter: number
+  minSegmentLength: number
+}
+
+export interface CutSegment {
+  start: number
+  end: number
+  duration: number
+  words: number
+  reason: string
+}
+
+export interface SilenceGap {
+  start: number
+  end: number
+  duration: number
+}
+
+export interface SilenceAnalysisResult {
+  silenceGaps: SilenceGap[]
+  cutSegments: CutSegment[]
+  summary: {
+    originalDuration: number
+    cutDuration: number
+    removedDuration: number
+    removedPercentage: number
+    segmentCount: number
+  }
+}
+
+export interface VideoCut {
+  id: string
+  originalVideoId: string
+  sourceType: 'original' | 'burned'
+  cutCloudinaryId: string
+  cutSegments: CutSegment[]
+  cuttingConfig: CuttingConfig
+  originalDuration: number
+  cutDuration: number
+  removedDuration: number
+  removedPercentage: number
+  createdAt: string
+  cutVideoUrl?: string
 }
 
 export interface CreditPack {

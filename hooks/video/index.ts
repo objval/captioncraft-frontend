@@ -7,3 +7,4 @@ export { useVideoSubscription as useSingleVideoSubscription } from './useVideoSu
 // Export other video hooks
 export { useTranscriptEditing } from './useTranscriptEditing'
 export { useVideoControls } from './useVideoControls'
+export { useVideoCutting } from './useVideoCutting'

@@ -16,6 +16,15 @@ interface VideoRecord {
   job_error_message?: string
   caption_style?: any
   transcripts?: TranscriptRecord[]
+  // Cutting fields
+  cutting_config?: any
+  cut_segments?: any
+  original_duration?: number
+  cut_duration?: number
+  cut_original_cloudinary_id?: string
+  cut_burned_cloudinary_id?: string
+  has_cut_original?: boolean
+  has_cut_burned?: boolean
 }
 
 interface TranscriptRecord {
@@ -40,6 +49,13 @@ function transformVideoRecord(video: VideoRecord): Video {
       : undefined,
     burned_video_url: video.final_video_cloudinary_id
       ? `${CLOUDINARY_BASE_URL}/${video.final_video_cloudinary_id}`
+      : undefined,
+    // Cut video URLs
+    cut_original_url: video.cut_original_cloudinary_id
+      ? `${CLOUDINARY_BASE_URL}/${video.cut_original_cloudinary_id}`
+      : undefined,
+    cut_burned_url: video.cut_burned_cloudinary_id
+      ? `${CLOUDINARY_BASE_URL}/${video.cut_burned_cloudinary_id}`
       : undefined,
     // Include transcript data from the active transcript
     transcript_data: video.transcripts?.[0]?.transcript_data || undefined,
