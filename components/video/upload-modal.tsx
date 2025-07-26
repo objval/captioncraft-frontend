@@ -1,16 +1,20 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
+import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import { useCreditBalance, useUploadCredits } from "@/hooks/credits"
 import { useAuth } from "@/components/providers/auth-provider"
-import { Upload, X, AlertCircle, Coins, CheckCircle } from "lucide-react"
+import { Upload, X, AlertCircle, Coins, CheckCircle, Sparkles } from "lucide-react"
 import toast from "@/lib/utils/toast"
 import { createClient } from "@/lib/database/supabase/client"
 import { uploadEvents } from "@/lib/utils/upload-events"
+import type { Video } from "@/lib/api/api"
 
 interface UploadModalProps {
   isOpen: boolean
@@ -23,6 +27,15 @@ export function UploadModal({ isOpen, onCloseAction, onUploadComplete }: UploadM
   const [uploadProgress, setUploadProgress] = useState(0)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploadComplete, setUploadComplete] = useState(false)
+  const [autoRedirect, setAutoRedirect] = useState(() => {
+    // Load preference from localStorage
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('autoRedirectAfterUpload') === 'true'
+    }
+    return false
+  })
+  const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null)
+  const router = useRouter()
 
   const { user } = useAuth()
   const { credits, refreshCredits } = useCreditBalance(user?.id, { watchTransactions: true })
@@ -33,6 +46,100 @@ export function UploadModal({ isOpen, onCloseAction, onUploadComplete }: UploadM
       refreshCredits()
     }
   })
+
+  // Set up realtime subscription for video status
+  // NOTE: Make sure Realtime is enabled for the 'videos' table in Supabase dashboard
+  // Go to Database > Replication and enable the 'videos' table
+  useEffect(() => {
+    if (!uploadedVideoId || !autoRedirect) return
+
+    const supabase = createClient()
+    let channel: any = null
+    let pollInterval: NodeJS.Timeout | null = null
+    
+    console.log('Setting up realtime subscription for video:', uploadedVideoId)
+    
+    // First, do a direct query to check current status
+    const checkVideoStatus = async () => {
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('id', uploadedVideoId)
+        .single()
+      
+      if (data && (data.status === 'ready' || data.status === 'complete')) {
+        toast.success("Video is ready! Redirecting to editor...")
+        router.push(`/dashboard/editor/${uploadedVideoId}`)
+        return true
+      }
+      return false
+    }
+    
+    // Check immediately in case it's already ready
+    checkVideoStatus().then(isReady => {
+      if (isReady) return
+      
+      // If not ready, set up realtime subscription
+      channel = supabase
+        .channel(`video-${uploadedVideoId}`)
+        .on(
+          'postgres_changes' as any,
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'videos',
+            filter: `id=eq.${uploadedVideoId}`
+          },
+          async (payload) => {
+            console.log("Realtime update received:", payload)
+            const updatedVideo = payload.new as Video
+            console.log("Video status updated:", updatedVideo.status)
+            
+            // Check if video is ready (processed and transcript is available)
+            if (updatedVideo.status === "ready" || updatedVideo.status === "complete") {
+              console.log("Video is ready! Attempting redirect...")
+              toast.success("Video is ready! Redirecting to editor...")
+              // Small delay to ensure everything is loaded
+              setTimeout(() => {
+                console.log("Redirecting to:", `/dashboard/editor/${uploadedVideoId}`)
+                router.push(`/dashboard/editor/${uploadedVideoId}`)
+              }, 500)
+            } else if (updatedVideo.status === "failed") {
+              toast.error("Video processing failed. Please try again.")
+              setAutoRedirect(false) // Disable auto-redirect on failure
+            } else {
+              console.log("Video status is:", updatedVideo.status, "- not redirecting yet")
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log('Subscription status:', status)
+          if (status === 'SUBSCRIBED') {
+            console.log('Successfully subscribed to video updates')
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('Error subscribing to video updates')
+            // Fall back to polling
+            pollInterval = setInterval(async () => {
+              const ready = await checkVideoStatus()
+              if (ready) {
+                clearInterval(pollInterval!)
+                pollInterval = null
+              }
+            }, 2000) // Check every 2 seconds
+          }
+        })
+    })
+
+    return () => {
+      // Clean up any polling interval if it exists
+      if (pollInterval) {
+        clearInterval(pollInterval)
+      }
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [uploadedVideoId, autoRedirect, router])
 
   const uploadVideo = async (file: File): Promise<any> => {
     const supabase = createClient()
@@ -198,7 +305,14 @@ export function UploadModal({ isOpen, onCloseAction, onUploadComplete }: UploadM
       setUploadComplete(true)
 
       const videoId = response.videoId || response.id
-      toast.success(`Video uploaded successfully! Video ID: ${videoId}`)
+      setUploadedVideoId(videoId) // Store the video ID for realtime subscription
+      
+      if (autoRedirect) {
+        toast.success("Video uploaded! Waiting for processing to complete...")
+      } else {
+        toast.success(`Video uploaded successfully! Video ID: ${videoId}`)
+      }
+      
       console.log("Upload response:", response)
       console.log("Upload complete - waiting for real-time credit update")
 
@@ -218,10 +332,13 @@ export function UploadModal({ isOpen, onCloseAction, onUploadComplete }: UploadM
         uploadEvents.emitUploadComplete(videoId)
       }, 1500) // Wait 1.5 seconds to ensure database record exists
 
-      // Auto-close after 3 seconds to ensure database record is created
-      setTimeout(() => {
-        handleClose()
-      }, 3000)
+      // Don't auto-close if auto-redirect is enabled
+      if (!autoRedirect) {
+        // Auto-close after 3 seconds to ensure database record is created
+        setTimeout(() => {
+          handleClose()
+        }, 3000)
+      }
     } catch (error: any) {
       console.error("Upload error:", error)
       handleUploadError(error)
@@ -238,6 +355,8 @@ export function UploadModal({ isOpen, onCloseAction, onUploadComplete }: UploadM
       setSelectedFile(null)
       setUploadProgress(0)
       setUploadComplete(false)
+      setUploadedVideoId(null)
+      setAutoRedirect(false)
     }
   }
 
@@ -266,11 +385,33 @@ export function UploadModal({ isOpen, onCloseAction, onUploadComplete }: UploadM
             </div>
           </div>
 
+          {/* Auto-redirect Toggle */}
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <Label htmlFor="auto-redirect" className="flex items-center gap-2 cursor-pointer">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm">Auto-redirect when ready</span>
+            </Label>
+            <Switch
+              id="auto-redirect"
+              checked={autoRedirect}
+              onCheckedChange={(checked) => {
+                setAutoRedirect(checked)
+                // Save preference to localStorage
+                localStorage.setItem('autoRedirectAfterUpload', checked.toString())
+              }}
+              disabled={uploading || uploadComplete}
+            />
+          </div>
+
           {/* Upload Complete */}
           {uploadComplete && (
             <div className="flex items-center gap-2 p-3 bg-blue-50 text-blue-700 rounded-lg">
               <CheckCircle className="h-4 w-4" />
-              <span className="text-sm">Upload completed successfully! Processing will begin shortly.</span>
+              <span className="text-sm">
+                {autoRedirect 
+                  ? "Upload completed! You'll be redirected when the video is ready..." 
+                  : "Upload completed successfully! Processing will begin shortly."}
+              </span>
             </div>
           )}
 

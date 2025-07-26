@@ -1,11 +1,19 @@
-import { RefObject } from "react"
+import { RefObject, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Film } from "lucide-react"
+import { Film, Layers } from "lucide-react"
 import { VideoControls } from "./VideoControls"
 import { ProgressBar } from "./ProgressBar"
 import { VolumeControl } from "./VolumeControl"
 import { CuttingTimeline } from "./CuttingTimeline"
+import { VideoFrameTimeline } from "./VideoFrameTimeline"
 import { CutMarkControls } from "./CutMarkControls"
+import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import type { Video } from "@/lib/api/api"
 import type { CutMark, CutMarkDraft, CuttingState } from "@/lib/types/video-cutting"
 
@@ -90,13 +98,41 @@ export function VideoPlayer({
   onUndo,
   onRedo,
 }: VideoPlayerProps) {
+  const [useFrameTimeline, setUseFrameTimeline] = useState(false)
+
   return (
     <Card className="shadow-lg border-0 bg-card/80 dark:bg-card/60 backdrop-blur-sm">
       <CardHeader className="pb-3 px-3 sm:px-6">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-foreground">
-          <Film className="h-4 w-4" />
-          <span className="hidden sm:inline">Video Player</span>
-          <span className="sm:hidden">Player</span>
+        <CardTitle className="flex items-center justify-between text-base sm:text-lg text-foreground">
+          <div className="flex items-center gap-2">
+            <Film className="h-4 w-4" />
+            <span className="hidden sm:inline">Video Player</span>
+            <span className="sm:hidden">Player</span>
+          </div>
+          
+          {/* Frame Timeline Toggle - Only on desktop */}
+          {enableCutting && (
+            <div className="hidden lg:block">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant={useFrameTimeline ? "default" : "outline"}
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setUseFrameTimeline(!useFrameTimeline)}
+                    >
+                      <Layers className="h-3 w-3 mr-1" />
+                      <span className="hidden sm:inline">Frame Timeline</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{useFrameTimeline ? 'Switch to simple timeline' : 'Switch to frame timeline'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 px-2 sm:px-6 pb-3 sm:pb-6">
@@ -106,6 +142,7 @@ export function VideoPlayer({
             ref={videoRef}
             className="w-full aspect-video"
             src={videoUrl}
+            crossOrigin="anonymous"
             onVolumeChange={(e) => {
               const target = e.target as HTMLVideoElement
               onVideoVolumeChange?.(target.volume, target.muted)
@@ -146,22 +183,43 @@ export function VideoPlayer({
           {/* Progress Bar or Cutting Timeline - Simplified on mobile */}
           {enableCutting ? (
             <div className="hidden lg:block">
-              <CuttingTimeline
-              currentTime={currentTime}
-              duration={duration}
-              cutMarks={cutMarks}
-              activeCutId={activeCutId}
-              draft={draft}
-              showCutOverlay={showCutOverlay}
-              isPreviewMode={isPreviewMode}
-              onSeek={onSeek}
-              onStartDraft={onStartDraft!}
-              onUpdateDraft={onUpdateDraft!}
-              onCompleteDraft={onCompleteDraft!}
-              onCancelDraft={onCancelDraft!}
-              onSelectCut={onSelectCut!}
-              onUpdateCutMark={onUpdateCutMark!}
-              />
+              {useFrameTimeline ? (
+                <VideoFrameTimeline
+                  videoId={video.id}
+                  videoRef={videoRef}
+                  currentTime={currentTime}
+                  duration={duration}
+                  cutMarks={cutMarks}
+                  activeCutId={activeCutId}
+                  draft={draft}
+                  showCutOverlay={showCutOverlay}
+                  isPreviewMode={isPreviewMode}
+                  onSeek={onSeek}
+                  onStartDraft={onStartDraft!}
+                  onUpdateDraft={onUpdateDraft!}
+                  onCompleteDraft={onCompleteDraft!}
+                  onCancelDraft={onCancelDraft!}
+                  onSelectCut={onSelectCut!}
+                  onUpdateCutMark={onUpdateCutMark!}
+                />
+              ) : (
+                <CuttingTimeline
+                  currentTime={currentTime}
+                  duration={duration}
+                  cutMarks={cutMarks}
+                  activeCutId={activeCutId}
+                  draft={draft}
+                  showCutOverlay={showCutOverlay}
+                  isPreviewMode={isPreviewMode}
+                  onSeek={onSeek}
+                  onStartDraft={onStartDraft!}
+                  onUpdateDraft={onUpdateDraft!}
+                  onCompleteDraft={onCompleteDraft!}
+                  onCancelDraft={onCancelDraft!}
+                  onSelectCut={onSelectCut!}
+                  onUpdateCutMark={onUpdateCutMark!}
+                />
+              )}
             </div>
           ) : (
             <ProgressBar

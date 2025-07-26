@@ -20,7 +20,7 @@ import {
   Clock,
 } from 'lucide-react'
 import { CutMark, CUT_COLORS } from '@/lib/types/video-cutting'
-import { formatTime } from '@/lib/utils/time-formatters'
+import { formatTime, formatTimeDetailed } from '@/lib/utils/time-formatters'
 import { cn } from '@/lib/utils/general'
 import { useState } from 'react'
 
@@ -230,7 +230,7 @@ export function CutListPanel({
                             onSeekToTime(cut.startTime)
                           }}
                         >
-                          {formatTime(cut.startTime)}
+                          {formatTimeDetailed(cut.startTime)}
                         </button>
                         <span>→</span>
                         <button
@@ -240,7 +240,7 @@ export function CutListPanel({
                             onSeekToTime(cut.endTime)
                           }}
                         >
-                          {formatTime(cut.endTime)}
+                          {formatTimeDetailed(cut.endTime)}
                         </button>
                         <span className="ml-auto flex items-center gap-1">
                           <Clock className="h-3 w-3" />

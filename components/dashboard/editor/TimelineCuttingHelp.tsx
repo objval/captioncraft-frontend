@@ -19,7 +19,7 @@ export function TimelineCuttingHelp() {
             </li>
             <li className="flex items-start gap-2">
               <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
-              <span>Click "Apply Cuts" in the header when ready to process</span>
+              <span>Click &quot;Apply Cuts&quot; in the header when ready to process</span>
             </li>
           </ul>
         </div>
