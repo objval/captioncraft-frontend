@@ -67,8 +67,9 @@ export function VideoFrameTimeline({
   const [extractionError, setExtractionError] = useState<string | null>(null)
   const [zoomLevel, setZoomLevel] = useState(1) // 0.5x to 3x zoom
   const [isDragging, setIsDragging] = useState(false)
-  const [dragType, setDragType] = useState<'seek' | 'draft' | 'resize' | null>(null)
+  const [dragType, setDragType] = useState<'draft' | 'resize' | null>(null)
   const [resizeTarget, setResizeTarget] = useState<{ id: string; edge: 'start' | 'end' } | null>(null)
+  const [isShiftPressed, setIsShiftPressed] = useState(false)
   const autoScrollRef = useRef<{ interval: NodeJS.Timeout | null }>({ interval: null })
 
   // Calculate frame dimensions based on zoom level
@@ -218,6 +219,41 @@ export function VideoFrameTimeline({
     }
   }, [videoId, duration, frameInterval])
 
+  // Track Shift key state
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setIsShiftPressed(true)
+    }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setIsShiftPressed(false)
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [])
+
+  // Add mouse wheel horizontal scrolling
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault()
+        // Convert vertical scroll to horizontal
+        container.scrollLeft += e.deltaY
+      }
+    }
+
+    container.addEventListener('wheel', handleWheel, { passive: false })
+    return () => container.removeEventListener('wheel', handleWheel)
+  }, [])
+
   // Auto-scroll to keep current time in view
   useEffect(() => {
     if (!scrollContainerRef.current || !frames.length) return
@@ -302,13 +338,9 @@ export function VideoFrameTimeline({
       setIsDragging(true)
       setDragType('draft')
       onStartDraft(time)
-    } else {
-      // Regular seek
-      setIsDragging(true)
-      setDragType('seek')
-      onSeek(time)
     }
-  }, [cutMarks, duration, draft, getTimeFromPosition, onSeek, onStartDraft, onSelectCut])
+    // Regular clicking no longer seeks - only scrolling navigates
+  }, [cutMarks, duration, draft, getTimeFromPosition, onStartDraft, onSelectCut])
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || !scrollContainerRef.current) return
@@ -366,9 +398,7 @@ export function VideoFrameTimeline({
     // Normal drag handling
     const time = getTimeFromPosition(e.clientX)
     
-    if (dragType === 'seek') {
-      onSeek(time)
-    } else if (dragType === 'draft') {
+    if (dragType === 'draft') {
       onUpdateDraft(time)
     } else if (dragType === 'resize' && resizeTarget) {
       const cutMark = cutMarks.find(m => m.id === resizeTarget.id)
@@ -380,7 +410,7 @@ export function VideoFrameTimeline({
         onUpdateCutMark(resizeTarget.id, { endTime: Math.max(time, cutMark.startTime + 0.1) })
       }
     }
-  }, [isDragging, dragType, resizeTarget, cutMarks, getTimeFromPosition, onSeek, onUpdateDraft, onUpdateCutMark])
+  }, [isDragging, dragType, resizeTarget, cutMarks, getTimeFromPosition, onUpdateDraft, onUpdateCutMark])
 
   const handleMouseUp = useCallback(() => {
     // Clear auto-scroll
@@ -531,7 +561,7 @@ export function VideoFrameTimeline({
       {/* Timeline */}
       <div 
         ref={scrollContainerRef}
-        className="relative overflow-x-auto overflow-y-hidden rounded-lg border border-border bg-secondary/50"
+        className="relative overflow-x-auto overflow-y-hidden rounded-lg border border-border bg-secondary/50 scroll-smooth"
         style={{ height: frameHeight + 40 }}
       >
         {isLoading ? (
@@ -558,11 +588,12 @@ export function VideoFrameTimeline({
         ) : (
           <div
             ref={timelineRef}
-            className="relative flex cursor-pointer"
+            className="relative flex"
             style={{ 
               height: frameHeight + 40,
               width: frames.length * frameWidth,
-              userSelect: 'none' 
+              userSelect: 'none',
+              cursor: isShiftPressed ? 'crosshair' : 'default'
             }}
             onMouseDown={handleMouseDown}
           >
@@ -637,7 +668,7 @@ export function VideoFrameTimeline({
       </div>
       
       <div className="text-xs text-muted-foreground text-center">
-        Hold Shift + Click to mark cuts • Scroll to navigate timeline
+        Scroll to navigate • Hold Shift + Drag to mark cuts
       </div>
     </div>
   )
