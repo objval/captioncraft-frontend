@@ -11,6 +11,9 @@ interface FrameExtractionOptions {
   maxWidth?: number // Maximum width for thumbnails (default: 320)
   maxHeight?: number // Maximum height for thumbnails (default: 180)
   onProgress?: (progress: number) => void
+  onFrameExtracted?: (frame: ExtractedFrame) => void // Called as each frame is extracted
+  prioritizeVisible?: boolean // Extract visible frames first (default: true)
+  visibleRange?: { start: number; end: number } // Visible time range
 }
 
 export class VideoFrameExtractor {
@@ -42,11 +45,14 @@ export class VideoFrameExtractor {
       quality = 0.8,
       maxWidth = 320,
       maxHeight = 180,
-      onProgress
+      onProgress,
+      onFrameExtracted,
+      prioritizeVisible = true,
+      visibleRange
     } = options
 
     if (this.isExtracting) {
-      throw new Error('Frame extraction already in progress')
+      this.abort() // Abort any existing extraction
     }
 
     this.isExtracting = true
@@ -76,25 +82,55 @@ export class VideoFrameExtractor {
       this.canvas.width = thumbWidth
       this.canvas.height = thumbHeight
 
+      // Create frame indices
+      const frameIndices: number[] = []
       for (let i = 0; i < frameCount; i++) {
+        frameIndices.push(i)
+      }
+
+      // Sort indices based on priority (visible frames first)
+      if (prioritizeVisible && visibleRange) {
+        frameIndices.sort((a, b) => {
+          const timeA = a * interval
+          const timeB = b * interval
+          const inRangeA = timeA >= visibleRange.start && timeA <= visibleRange.end
+          const inRangeB = timeB >= visibleRange.start && timeB <= visibleRange.end
+          
+          if (inRangeA && !inRangeB) return -1
+          if (!inRangeA && inRangeB) return 1
+          
+          // Both in range or both out of range, maintain order
+          return a - b
+        })
+      }
+
+      // Extract frames in priority order
+      for (let idx = 0; idx < frameIndices.length; idx++) {
         if (this.abortController.signal.aborted) {
           throw new Error('Frame extraction aborted')
         }
 
+        const i = frameIndices[idx]
         const timestamp = i * interval
         const frame = await this.extractFrameAtTime(timestamp, quality)
         
         if (frame) {
           this.frames.set(timestamp, frame)
           extractedFrames.push(frame)
+          
+          // Call callback for progressive loading
+          if (onFrameExtracted) {
+            onFrameExtracted(frame)
+          }
         }
 
         if (onProgress) {
-          onProgress((i + 1) / frameCount)
+          onProgress((idx + 1) / frameCount)
         }
       }
 
-      return extractedFrames
+      // Sort frames by timestamp before returning
+      return extractedFrames.sort((a, b) => a.timestamp - b.timestamp)
     } finally {
       this.isExtracting = false
       this.abortController = undefined
@@ -199,6 +235,8 @@ export class VideoFrameExtractor {
     if (this.abortController) {
       this.abortController.abort()
     }
+    this.isExtracting = false
+    this.frames.clear()
   }
 
   /**

@@ -69,7 +69,7 @@ export function VideoFrameTimeline({
   const [isDragging, setIsDragging] = useState(false)
   const [dragType, setDragType] = useState<'seek' | 'draft' | 'resize' | null>(null)
   const [resizeTarget, setResizeTarget] = useState<{ id: string; edge: 'start' | 'end' } | null>(null)
-  const [extractor, setExtractor] = useState<VideoFrameExtractor | null>(null)
+  const autoScrollRef = useRef<{ interval: NodeJS.Timeout | null }>({ interval: null })
 
   // Calculate frame dimensions based on zoom level
   const frameWidth = useMemo(() => Math.round(160 * zoomLevel), [zoomLevel])
@@ -77,42 +77,45 @@ export function VideoFrameTimeline({
   
   // Calculate frame interval based on zoom (more frames when zoomed in)
   const frameInterval = useMemo(() => {
-    if (zoomLevel >= 2) return 0.5
-    if (zoomLevel >= 1.5) return 1
-    if (zoomLevel >= 1) return 2
-    return 3
+    // Start with larger intervals for faster initial load
+    const baseInterval = 2 // Base 2 seconds
+    if (zoomLevel >= 2.5) return 0.5
+    if (zoomLevel >= 2) return 1
+    if (zoomLevel >= 1.5) return 1.5
+    if (zoomLevel >= 1) return baseInterval
+    return baseInterval * 1.5
   }, [zoomLevel])
 
-  // Initialize frame extractor
-  useEffect(() => {
-    if (videoRef.current && !extractor) {
-      const frameExtractor = new VideoFrameExtractor(videoRef.current)
-      setExtractor(frameExtractor)
-    }
-  }, [videoRef, extractor])
 
   // Load frames
   useEffect(() => {
-    if (!extractor || !videoRef.current || !duration) return
+    if (!videoRef.current || !duration) return
+
+    let isMounted = true
+    let extractorInstance: VideoFrameExtractor | null = null
+    let extractionInProgress = false
 
     const loadFrames = async () => {
-      setIsLoading(true)
-      setLoadingProgress(0)
-      setExtractionError(null)
+      // Prevent multiple simultaneous extractions
+      if (extractionInProgress || !isMounted) return
+      extractionInProgress = true
 
       try {
+        setIsLoading(true)
+        setLoadingProgress(0)
+        setExtractionError(null)
+
         // Check cache first
         const cache = await getFrameCache()
         const cachedFrames = await cache.getVideoFrames(videoId)
         
-        // Check if cached frames are the old low-quality ones
+        // Check if cached frames need re-extraction
         const needsReExtraction = cachedFrames.length > 0 && 
           (cachedFrames[0].width < 320 || cachedFrames[0].height < 180)
         
         if (needsReExtraction) {
-          // Clear old low-quality frames
           await cache.clearVideoFrames(videoId)
-        } else if (cachedFrames.length > 0) {
+        } else if (cachedFrames.length > 0 && isMounted) {
           setFrames(cachedFrames.map(f => ({
             timestamp: f.timestamp,
             dataUrl: f.dataUrl,
@@ -120,49 +123,100 @@ export function VideoFrameTimeline({
             height: f.height
           })))
           setIsLoading(false)
+          extractionInProgress = false
           return
         }
 
-        // Extract new frames
-        const extractedFrames = await extractor.extractFrames({
+        // Create extractor instance
+        if (!isMounted || !videoRef.current) return
+        extractorInstance = new VideoFrameExtractor(videoRef.current)
+
+        // Calculate visible range for prioritization
+        const containerWidth = scrollContainerRef.current?.clientWidth || window.innerWidth
+        const visibleFrameCount = Math.ceil(containerWidth / frameWidth)
+        const currentFrameIndex = Math.floor(currentTime / frameInterval)
+        const visibleStart = Math.max(0, (currentFrameIndex - visibleFrameCount / 2) * frameInterval)
+        const visibleEnd = Math.min(duration, (currentFrameIndex + visibleFrameCount / 2) * frameInterval)
+
+        // Track frames as they're extracted
+        const frameMap = new Map<number, Frame>()
+
+        // Extract new frames with progressive loading
+        const extractedFrames = await extractorInstance.extractFrames({
           interval: frameInterval,
-          quality: 0.9, // Increased from 0.6 to 0.9 for better quality
-          maxWidth: 320, // Doubled from 160 for sharper images
-          maxHeight: 180, // Doubled from 90 for sharper images
-          onProgress: setLoadingProgress
+          quality: 0.9,
+          maxWidth: 320,
+          maxHeight: 180,
+          onProgress: (progress) => {
+            if (isMounted) setLoadingProgress(progress)
+          },
+          prioritizeVisible: true,
+          visibleRange: { start: visibleStart, end: visibleEnd },
+          onFrameExtracted: async (frame) => {
+            if (!isMounted) return
+            
+            // Add frame to map and update state
+            frameMap.set(frame.timestamp, frame)
+            
+            // Convert map to sorted array
+            const sortedFrames = Array.from(frameMap.values())
+              .sort((a, b) => a.timestamp - b.timestamp)
+            
+            setFrames(sortedFrames)
+            
+            // Hide loading indicator once we have some frames
+            if (frameMap.size >= 5) {
+              setIsLoading(false)
+            }
+            
+            // Cache the frame asynchronously
+            cache.setFrame(
+              videoId,
+              frame.timestamp,
+              frame.dataUrl,
+              frame.width,
+              frame.height
+            ).catch(console.error)
+          }
         })
 
         // Filter out null frames (failed extractions due to CORS)
         const validFrames = extractedFrames.filter(f => f !== null)
         
-        if (validFrames.length === 0) {
+        if (validFrames.length === 0 && isMounted) {
           console.error('No frames could be extracted. This may be due to CORS restrictions.')
-          setExtractionError('Unable to extract video frames. This may be due to cross-origin restrictions. Please ensure the video source allows frame extraction.')
+          setExtractionError('Unable to extract video frames. This may be due to cross-origin restrictions.')
           setIsLoading(false)
+          extractionInProgress = false
           return
         }
 
-        setFrames(validFrames)
-
-        // Cache the frames
-        for (const frame of validFrames) {
-          await cache.setFrame(
-            videoId,
-            frame.timestamp,
-            frame.dataUrl,
-            frame.width,
-            frame.height
-          )
+        if (isMounted) {
+          setFrames(validFrames)
         }
-      } catch (error) {
-        console.error('Failed to extract frames:', error)
+      } catch (error: any) {
+        if (isMounted && error.message !== 'Frame extraction aborted') {
+          console.error('Failed to extract frames:', error)
+          setExtractionError('Unable to extract video frames')
+        }
       } finally {
-        setIsLoading(false)
+        if (isMounted) {
+          setIsLoading(false)
+          extractionInProgress = false
+        }
       }
     }
 
     loadFrames()
-  }, [extractor, videoId, duration, frameInterval])
+
+    // Cleanup function
+    return () => {
+      isMounted = false
+      if (extractorInstance) {
+        extractorInstance.abort()
+      }
+    }
+  }, [videoId, duration, frameInterval])
 
   // Auto-scroll to keep current time in view
   useEffect(() => {
@@ -257,8 +311,59 @@ export function VideoFrameTimeline({
   }, [cutMarks, duration, draft, getTimeFromPosition, onSeek, onStartDraft, onSelectCut])
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return
+    if (!isDragging || !scrollContainerRef.current) return
     
+    const container = scrollContainerRef.current
+    const rect = container.getBoundingClientRect()
+    const mouseX = e.clientX
+    
+    // Auto-scroll configuration
+    const edgeZone = 100 // pixels from edge
+    const maxScrollSpeed = 20 // pixels per frame
+    
+    // Clear previous auto-scroll
+    if (autoScrollRef.current.interval) {
+      clearInterval(autoScrollRef.current.interval)
+      autoScrollRef.current.interval = null
+    }
+    
+    // Calculate scroll direction and speed
+    let scrollSpeed = 0
+    if (mouseX < rect.left + edgeZone) {
+      // Scroll left - speed increases closer to edge
+      const distance = (rect.left + edgeZone - mouseX) / edgeZone
+      scrollSpeed = -Math.round(maxScrollSpeed * Math.pow(distance, 2))
+    } else if (mouseX > rect.right - edgeZone) {
+      // Scroll right - speed increases closer to edge
+      const distance = (mouseX - (rect.right - edgeZone)) / edgeZone
+      scrollSpeed = Math.round(maxScrollSpeed * Math.pow(distance, 2))
+    }
+    
+    // Start auto-scrolling
+    if (scrollSpeed !== 0) {
+      autoScrollRef.current.interval = setInterval(() => {
+        if (scrollContainerRef.current && isDragging) {
+          scrollContainerRef.current.scrollLeft += scrollSpeed
+          
+          // Update drag position while scrolling
+          const newTime = getTimeFromPosition(e.clientX)
+          if (dragType === 'draft') {
+            onUpdateDraft(newTime)
+          } else if (dragType === 'resize' && resizeTarget) {
+            const cutMark = cutMarks.find(m => m.id === resizeTarget.id)
+            if (cutMark) {
+              if (resizeTarget.edge === 'start') {
+                onUpdateCutMark(resizeTarget.id, { startTime: Math.min(newTime, cutMark.endTime - 0.1) })
+              } else {
+                onUpdateCutMark(resizeTarget.id, { endTime: Math.max(newTime, cutMark.startTime + 0.1) })
+              }
+            }
+          }
+        }
+      }, 16) // ~60fps
+    }
+    
+    // Normal drag handling
     const time = getTimeFromPosition(e.clientX)
     
     if (dragType === 'seek') {
@@ -278,6 +383,12 @@ export function VideoFrameTimeline({
   }, [isDragging, dragType, resizeTarget, cutMarks, getTimeFromPosition, onSeek, onUpdateDraft, onUpdateCutMark])
 
   const handleMouseUp = useCallback(() => {
+    // Clear auto-scroll
+    if (autoScrollRef.current.interval) {
+      clearInterval(autoScrollRef.current.interval)
+      autoScrollRef.current.interval = null
+    }
+    
     if (dragType === 'draft') {
       onCompleteDraft()
     }
@@ -295,6 +406,12 @@ export function VideoFrameTimeline({
       return () => {
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
+        // Clean up auto-scroll on unmount
+        const autoScroll = autoScrollRef.current
+        if (autoScroll.interval) {
+          clearInterval(autoScroll.interval)
+          autoScroll.interval = null
+        }
       }
     }
   }, [isDragging, handleMouseMove, handleMouseUp])
@@ -441,10 +558,11 @@ export function VideoFrameTimeline({
         ) : (
           <div
             ref={timelineRef}
-            className="relative flex"
+            className="relative flex cursor-pointer"
             style={{ 
               height: frameHeight + 40,
-              width: frames.length * frameWidth 
+              width: frames.length * frameWidth,
+              userSelect: 'none' 
             }}
             onMouseDown={handleMouseDown}
           >
@@ -453,20 +571,41 @@ export function VideoFrameTimeline({
               <div
                 key={frame.timestamp}
                 className="relative flex-shrink-0 border-r border-border/50"
-                style={{ width: frameWidth, height: frameHeight + 40 }}
+                style={{ 
+                  width: frameWidth, 
+                  height: frameHeight + 40,
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  MozUserSelect: 'none',
+                  msUserSelect: 'none'
+                }}
               >
-                <Image
-                  src={frame.dataUrl}
-                  alt={`Frame at ${formatTime(frame.timestamp)}`}
-                  fill
-                  className="object-cover"
-                  draggable={false}
-                  unoptimized
-                />
+                {/* Image container with no pointer events */}
+                <div 
+                  className="absolute inset-0 overflow-hidden"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <Image
+                    src={frame.dataUrl}
+                    alt={`Frame at ${formatTime(frame.timestamp)}`}
+                    fill
+                    className="object-cover"
+                    draggable={false}
+                    unoptimized
+                    style={{ 
+                      userSelect: 'none',
+                      WebkitUserDrag: 'none',
+                      pointerEvents: 'none'
+                    }}
+                  />
+                </div>
                 
                 {/* Time label */}
                 {index % Math.ceil(5 / zoomLevel) === 0 && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-1">
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-1"
+                    style={{ pointerEvents: 'none' }}
+                  >
                     {formatTime(frame.timestamp)}
                   </div>
                 )}

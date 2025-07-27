@@ -1,19 +1,12 @@
-import { RefObject, useState } from "react"
+import { RefObject } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Film, Layers } from "lucide-react"
+import { Film } from "lucide-react"
 import { VideoControls } from "./VideoControls"
 import { ProgressBar } from "./ProgressBar"
 import { VolumeControl } from "./VolumeControl"
-import { CuttingTimeline } from "./CuttingTimeline"
 import { VideoFrameTimeline } from "./VideoFrameTimeline"
+import { MobileFrameTimeline } from "./MobileFrameTimeline"
 import { CutMarkControls } from "./CutMarkControls"
-import { Button } from "@/components/ui/button"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import type { Video } from "@/lib/api/api"
 import type { CutMark, CutMarkDraft, CuttingState } from "@/lib/types/video-cutting"
 
@@ -98,8 +91,6 @@ export function VideoPlayer({
   onUndo,
   onRedo,
 }: VideoPlayerProps) {
-  const [useFrameTimeline, setUseFrameTimeline] = useState(false)
-
   return (
     <Card className="shadow-lg border-0 bg-card/80 dark:bg-card/60 backdrop-blur-sm">
       <CardHeader className="pb-3 px-3 sm:px-6">
@@ -109,30 +100,6 @@ export function VideoPlayer({
             <span className="hidden sm:inline">Video Player</span>
             <span className="sm:hidden">Player</span>
           </div>
-          
-          {/* Frame Timeline Toggle - Only on desktop */}
-          {enableCutting && (
-            <div className="hidden lg:block">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant={useFrameTimeline ? "default" : "outline"}
-                      className="h-7 px-2 text-xs"
-                      onClick={() => setUseFrameTimeline(!useFrameTimeline)}
-                    >
-                      <Layers className="h-3 w-3 mr-1" />
-                      <span className="hidden sm:inline">Frame Timeline</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{useFrameTimeline ? 'Switch to simple timeline' : 'Switch to frame timeline'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 px-2 sm:px-6 pb-3 sm:pb-6">
@@ -180,10 +147,11 @@ export function VideoPlayer({
             onSkipForward={onSkipForward}
           />
 
-          {/* Progress Bar or Cutting Timeline - Simplified on mobile */}
+          {/* Timeline Component */}
           {enableCutting ? (
-            <div className="hidden lg:block">
-              {useFrameTimeline ? (
+            <>
+              {/* Desktop Frame Timeline */}
+              <div className="hidden lg:block">
                 <VideoFrameTimeline
                   videoId={video.id}
                   videoRef={videoRef}
@@ -202,42 +170,32 @@ export function VideoPlayer({
                   onSelectCut={onSelectCut!}
                   onUpdateCutMark={onUpdateCutMark!}
                 />
-              ) : (
-                <CuttingTimeline
+              </div>
+              
+              {/* Mobile Frame Timeline */}
+              <div className="lg:hidden">
+                <MobileFrameTimeline
+                  videoId={video.id}
+                  videoRef={videoRef}
                   currentTime={currentTime}
                   duration={duration}
                   cutMarks={cutMarks}
                   activeCutId={activeCutId}
                   draft={draft}
-                  showCutOverlay={showCutOverlay}
-                  isPreviewMode={isPreviewMode}
                   onSeek={onSeek}
                   onStartDraft={onStartDraft!}
                   onUpdateDraft={onUpdateDraft!}
                   onCompleteDraft={onCompleteDraft!}
                   onCancelDraft={onCancelDraft!}
-                  onSelectCut={onSelectCut!}
-                  onUpdateCutMark={onUpdateCutMark!}
                 />
-              )}
-            </div>
+              </div>
+            </>
           ) : (
             <ProgressBar
               currentTime={currentTime}
               duration={duration}
               onSeek={onSeek}
             />
-          )}
-          
-          {/* Mobile Progress Bar for cutting mode */}
-          {enableCutting && (
-            <div className="lg:hidden">
-              <ProgressBar
-                currentTime={currentTime}
-                duration={duration}
-                onSeek={onSeek}
-              />
-            </div>
           )}
 
           {/* Volume Control - Hide on mobile to save space */}
