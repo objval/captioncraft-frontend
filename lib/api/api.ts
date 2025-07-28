@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/database/supabase/client"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://nesontheshet.com/v1"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.kalil.pro/v1"
 const YOUR_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dl32shhkk"
 // Helper function to make authenticated API calls with Supabase fallback
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
